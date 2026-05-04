@@ -35,9 +35,7 @@ export default function JoinCard({
             className="w-full bg-transparent text-center text-xl font-extrabold tracking-[0.3em] outline-none placeholder:text-on-surface-variant/50"
           />
         </div>
-        <p className="text-xs text-on-surface-variant text-center">
-          הכנס את שמך למעלה לפני ההצטרפות
-        </p>
+
         <button
           type="submit"
           disabled={roomCode.trim().length !== 4 || !name.trim() || loading}
@@ -45,6 +43,14 @@ export default function JoinCard({
         >
           {loading ? '...' : 'הצטרף למשחק'}
         </button>
+
+        {/* Tell the user exactly what's still missing */}
+        {!name.trim() && (
+          <p className="text-xs text-on-surface-variant text-center">יש להכניס שם למעלה תחילה</p>
+        )}
+        {name.trim() && roomCode.trim().length !== 4 && (
+          <p className="text-xs text-on-surface-variant text-center">יש להכניס קוד חדר בן 4 אותיות</p>
+        )}
       </form>
     </div>
   )

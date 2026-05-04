@@ -1,7 +1,8 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: 'Plus Jakarta Sans', sans-serif;
+  /* Heebo is the primary font — full Hebrew + Latin support. Plus Jakarta Sans is Latin fallback for headings. */
+  --font-sans: 'Heebo', 'Plus Jakarta Sans', sans-serif;
 
   --color-primary: #630ed4;
   --color-primary-container: #7c3aed;
@@ -23,12 +24,12 @@
 html, body, #root {
   height: 100%;
   background-color: #f8f9ff;
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: 'Heebo', 'Plus Jakarta Sans', sans-serif;
 }
 
-/* Lobby gradient background */
+/* Lobby gradient background — top is light purple, bottom deepens to convey depth */
 .lobby-bg {
-  background: linear-gradient(160deg, #f8f9ff 0%, #ede0ff 100%);
+  background: linear-gradient(160deg, #f0e8ff 0%, #ddd0f8 50%, #e8d5f5 100%);
 }
 
 /* Logo gradient */
@@ -123,6 +124,20 @@ html, body, #root {
   border-color: #ef4444;
   color: #ef4444;
   animation: pulse-urgent 0.6s ease-in-out infinite;
+}
+
+/* Custom transition duration for tip fade */
+.duration-400 {
+  transition-duration: 400ms;
+}
+
+/* Waving hand animation for the lobby waiting screen */
+@keyframes wave {
+  0%, 100% { transform: rotate(0deg); }
+  20%       { transform: rotate(20deg); }
+  40%       { transform: rotate(-10deg); }
+  60%       { transform: rotate(15deg); }
+  80%       { transform: rotate(-5deg); }
 }
 
 @keyframes pulse-urgent {

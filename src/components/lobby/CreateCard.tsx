@@ -1,14 +1,12 @@
 /**
  * Card for creating a new game room.
- * Player enters their display name here; the room code is generated on the server side.
- * The name input is shared with JoinCard via lifted state in Lobby.tsx.
+ * Name is collected above this card in Lobby.tsx — only the action button lives here.
  */
 export default function CreateCard({
-  name, loading, onNameChange, onCreate,
+  name, loading, onCreate,
 }: {
   name: string
   loading: boolean
-  onNameChange: (v: string) => void
   onCreate: () => void
 }) {
   return (
@@ -17,30 +15,17 @@ export default function CreateCard({
         <span className="text-xl">😊</span>
         <div>
           <p className="text-sm font-extrabold text-on-surface">התחל משחק חדש</p>
-          <p className="text-xs text-on-surface-variant">מלא פרטים ושתף את הקוד</p>
+          <p className="text-xs text-on-surface-variant">צור חדר ושתף את הקוד לחבר</p>
         </div>
       </div>
 
-      <div className="flex flex-col gap-3">
-        <div>
-          <label className="text-xs font-bold text-on-surface-variant mb-1 block">שם</label>
-          <input
-            type="text"
-            value={name}
-            onChange={e => onNameChange(e.target.value)}
-            placeholder="הכנס את שמך..."
-            dir="rtl"
-            className="game-input w-full rounded-xl py-3 px-4 text-sm font-medium"
-          />
-        </div>
-        <button
-          onClick={onCreate}
-          disabled={!name.trim() || loading}
-          className="btn-primary w-full py-3 rounded-xl font-bold text-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-        >
-          {loading ? '...' : 'צור משחק'}
-        </button>
-      </div>
+      <button
+        onClick={onCreate}
+        disabled={!name.trim() || loading}
+        className="btn-primary w-full py-3 rounded-xl font-bold text-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed mt-auto"
+      >
+        {loading ? '...' : 'צור משחק'}
+      </button>
     </div>
   )
 }

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useRoom } from '../hooks/useRoom'
-import LobbyLayout from '../layouts/LobbyLayout'
+import { useAudio } from '../hooks/useAudio'
 import Hero from './lobby/Hero'
 import WaitingView from './lobby/WaitingView'
 import JoinCard from './lobby/JoinCard'
@@ -24,6 +24,7 @@ export default function Lobby() {
   const [name, setName]         = useState('')
   const [roomCode, setRoomCode] = useState('')
   const { loading, error, waitingCode, createRoom, joinRoom, cancelWaiting } = useRoom()
+  useAudio('lobby')
 
   function handleJoin(e: React.FormEvent) {
     e.preventDefault()
@@ -36,7 +37,7 @@ export default function Lobby() {
   }
 
   return (
-    <LobbyLayout>
+    <div className="flex-1 flex flex-col items-center px-5 md:px-10 pt-8 pb-6 gap-8">
       <Hero />
 
       {/* Show inline error banner above the cards (e.g. "room not found") */}
@@ -46,6 +47,20 @@ export default function Lobby() {
         </div>
       )}
 
+      {/* Step 1: enter name before any action */}
+      <div className="w-full max-w-2xl flex flex-col gap-1">
+        <label className="text-xs font-bold text-on-surface-variant">מה שמך?</label>
+        <input
+          type="text"
+          value={name}
+          onChange={e => setName(e.target.value)}
+          placeholder="הכנס את שמך..."
+          dir="rtl"
+          className="game-input w-full rounded-xl py-3 px-4 text-sm font-medium"
+        />
+      </div>
+
+      {/* Step 2: choose action */}
       <div className="w-full max-w-2xl flex flex-col md:flex-row gap-4">
         <JoinCard
           name={name}
@@ -58,7 +73,6 @@ export default function Lobby() {
         <CreateCard
           name={name}
           loading={loading}
-          onNameChange={setName}
           onCreate={() => createRoom(name)}
         />
       </div>
@@ -69,6 +83,6 @@ export default function Lobby() {
           <FeatureCard key={title} icon={icon} title={title} desc={desc} />
         ))}
       </div>
-    </LobbyLayout>
+    </div>
   )
 }

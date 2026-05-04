@@ -1,5 +1,5 @@
 import { useSetup } from '../hooks/useSetup'
-import LobbyLayout from '../layouts/LobbyLayout'
+import { useAudio } from '../hooks/useAudio'
 import LoadingScreen from './ui/LoadingScreen'
 import ErrorScreen from './ui/ErrorScreen'
 import PlayersStatusBar from './setup/PlayersStatusBar'
@@ -22,6 +22,7 @@ export default function Setup() {
     questions, currentIndex, loading, saving, error, done,
     myStatus, partnerStatus, submitAnswer,
   } = useSetup()
+  useAudio('setup')
 
   if (loading) return <LoadingScreen message="טוען שאלות..." />
   if (error)   return <ErrorScreen message={error} />
@@ -33,7 +34,7 @@ export default function Setup() {
   const progress = (currentIndex / TOTAL_QUESTIONS) * 100
 
   return (
-    <LobbyLayout>
+    <div className="flex-1 flex flex-col items-center px-5 md:px-10 pt-8 pb-6 gap-8">
       <div className="w-full max-w-lg flex flex-col gap-6">
         {/* Live status bar — updates in real-time via Realtime broadcasts */}
         <PlayersStatusBar myStatus={myStatus} partnerStatus={partnerStatus} />
@@ -47,6 +48,6 @@ export default function Setup() {
           onAnswer={submitAnswer}
         />
       </div>
-    </LobbyLayout>
+    </div>
   )
 }

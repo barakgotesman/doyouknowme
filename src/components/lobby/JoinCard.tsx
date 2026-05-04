@@ -1,10 +1,14 @@
+import { Card, CardContent } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+
 /**
  * Card for joining an existing room by entering a 4-letter code.
  * Submit is disabled until both the name field and a 4-character code are filled in.
  */
 export default function JoinCard({
   name, roomCode, loading,
-  onNameChange, onRoomCodeChange, onSubmit,
+  onRoomCodeChange, onSubmit,
 }: {
   name: string
   roomCode: string
@@ -14,44 +18,46 @@ export default function JoinCard({
   onSubmit: (e: React.FormEvent) => void
 }) {
   return (
-    <div className="lobby-card-yellow rounded-2xl p-5 flex flex-col gap-4 flex-1">
-      <div className="flex items-center gap-2">
-        <span className="text-xl">🔑</span>
-        <div>
-          <p className="text-sm font-extrabold text-on-surface">הצטרף למשחק</p>
-          <p className="text-xs text-on-surface-variant">יש לך קוד חדר? הכנס אותו כאן</p>
+    <Card className="card-yellow flex-1">
+      <CardContent className="flex flex-col gap-4 p-5">
+        <div className="flex items-center gap-2">
+          <span className="text-xl">🔑</span>
+          <div>
+            <p className="text-sm font-extrabold text-foreground">הצטרף למשחק</p>
+            <p className="text-xs text-muted-foreground">יש לך קוד חדר? הכנס אותו כאן</p>
+          </div>
         </div>
-      </div>
 
-      <form onSubmit={onSubmit} className="flex flex-col gap-3">
-        <div className="game-input rounded-xl py-3 px-4 text-center text-xl font-extrabold tracking-[0.3em] text-on-surface">
-          <input
+        <form onSubmit={onSubmit} className="flex flex-col gap-3">
+          {/* Room code input — uppercase, centered, wide letter-spacing */}
+          <Input
             type="text"
             value={roomCode}
             onChange={e => onRoomCodeChange(e.target.value.toUpperCase())}
             placeholder="A B C D"
             maxLength={4}
             dir="ltr"
-            className="w-full bg-transparent text-center text-xl font-extrabold tracking-[0.3em] outline-none placeholder:text-on-surface-variant/50"
+            className="text-center text-xl font-extrabold tracking-[0.3em] bg-surface-low border-2 border-transparent focus-visible:border-primary focus-visible:ring-0 h-12"
           />
-        </div>
 
-        <button
-          type="submit"
-          disabled={roomCode.trim().length !== 4 || !name.trim() || loading}
-          className="btn-secondary w-full py-3 rounded-xl font-bold text-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-        >
-          {loading ? '...' : 'הצטרף למשחק'}
-        </button>
+          <Button
+            type="submit"
+            variant="brandYellow"
+            size="game"
+            disabled={roomCode.trim().length !== 4 || !name.trim() || loading}
+          >
+            {loading ? '...' : 'הצטרף למשחק'}
+          </Button>
 
-        {/* Tell the user exactly what's still missing */}
-        {!name.trim() && (
-          <p className="text-xs text-on-surface-variant text-center">יש להכניס שם למעלה תחילה</p>
-        )}
-        {name.trim() && roomCode.trim().length !== 4 && (
-          <p className="text-xs text-on-surface-variant text-center">יש להכניס קוד חדר בן 4 אותיות</p>
-        )}
-      </form>
-    </div>
+          {/* Tell the user exactly what's still missing */}
+          {!name.trim() && (
+            <p className="text-xs text-muted-foreground text-center">יש להכניס שם למעלה תחילה</p>
+          )}
+          {name.trim() && roomCode.trim().length !== 4 && (
+            <p className="text-xs text-muted-foreground text-center">יש להכניס קוד חדר בן 4 אותיות</p>
+          )}
+        </form>
+      </CardContent>
+    </Card>
   )
 }

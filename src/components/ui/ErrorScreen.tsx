@@ -1,13 +1,16 @@
+import { Card, CardContent } from '@/components/ui/card'
+
 /**
- * Full-screen error state — shown when a fatal error occurs during initialization.
- * Displays a red banner with the error message centred on screen.
+ * Full-screen error state shown when a fatal error occurs during initialization.
  */
 export default function ErrorScreen({ message }: { message: string }) {
   return (
     <div className="lobby-bg min-h-screen flex items-center justify-center px-5">
-      <div className="rounded-xl px-4 py-3 bg-red-50 border border-red-200 text-red-700 text-sm font-medium text-center max-w-sm">
-        {message}
-      </div>
+      <Card className="max-w-sm w-full border-destructive/40 bg-destructive/5">
+        <CardContent className="p-4 text-destructive text-sm font-medium text-center">
+          {message}
+        </CardContent>
+      </Card>
     </div>
   )
 }

@@ -1,116 +1,224 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 
+@custom-variant dark (&:is(.dark *));
+
+/* ── Design tokens ──────────────────────────────────────────────────────────
+   These are our app-level palette values. Shadcn's semantic tokens in :root
+   below reference these so both systems share the same source of truth.
+─────────────────────────────────────────────────────────────────────────── */
 @theme {
-  /* Heebo is the primary font — full Hebrew + Latin support. Plus Jakarta Sans is Latin fallback for headings. */
+  /* Heebo is the primary font — full Hebrew + Latin support */
   --font-sans: 'Heebo', 'Plus Jakarta Sans', sans-serif;
 
-  --color-primary: #630ed4;
-  --color-primary-container: #7c3aed;
-  --color-secondary: #fed01b;
-  --color-tertiary: #ae397b;
-  --color-surface: #f8f9ff;
-  --color-surface-low: #eff4ff;
+  /* Brand palette */
+  --color-brand-purple:    #630ed4;
+  --color-brand-purple-md: #7c3aed;
+  --color-brand-yellow:    #fed01b;
+  --color-brand-pink:      #ae397b;
+  --color-brand-cyan:      #22d3ee;
+
+  /* Surface scale */
+  --color-surface:           #f8f9ff;
+  --color-surface-low:       #eff4ff;
   --color-surface-container: #e6eeff;
-  --color-on-surface: #121c2a;
+
+  /* Text */
+  --color-on-surface:         #121c2a;
   --color-on-surface-variant: #4a4455;
-  --color-outline: #ccc3d8;
+
+  /* Borders */
+  --color-outline:         #ccc3d8;
   --color-outline-variant: #7b7487;
 }
 
+/* ── Shadcn semantic token overrides ────────────────────────────────────────
+   Map our brand into shadcn's --primary / --secondary / etc. so all shadcn
+   components (Button, Card, Badge, Progress…) automatically use our palette.
+─────────────────────────────────────────────────────────────────────────── */
+@theme inline {
+  /* Font */
+  --font-heading: var(--font-sans);
+
+  /* Shadcn colour aliases → our palette */
+  --color-background:         var(--color-surface);
+  --color-foreground:         var(--color-on-surface);
+  --color-card:               #ffffff;
+  --color-card-foreground:    var(--color-on-surface);
+  --color-popover:            #ffffff;
+  --color-popover-foreground: var(--color-on-surface);
+
+  /* Primary = brand purple */
+  --color-primary:            var(--color-brand-purple);
+  --color-primary-foreground: #ffffff;
+
+  /* Secondary = brand yellow */
+  --color-secondary:            var(--color-brand-yellow);
+  --color-secondary-foreground: var(--color-on-surface);
+
+  --color-muted:            var(--color-surface-container);
+  --color-muted-foreground: var(--color-on-surface-variant);
+
+  --color-accent:            var(--color-surface-low);
+  --color-accent-foreground: var(--color-on-surface);
+
+  --color-destructive: oklch(0.577 0.245 27.325);
+
+  --color-border: var(--color-outline);
+  --color-input:  var(--color-surface-low);
+  --color-ring:   var(--color-brand-purple);
+
+  /* Radius — slightly larger than shadcn default to match our rounded-2xl style */
+  --radius: 0.875rem;
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.4);
+}
+
+/* ── Base ───────────────────────────────────────────────────────────────── */
 * {
   box-sizing: border-box;
 }
 
 html, body, #root {
   height: 100%;
-  background-color: #f8f9ff;
+  background-color: var(--color-surface);
   font-family: 'Heebo', 'Plus Jakarta Sans', sans-serif;
 }
 
-/* Lobby gradient background — top is light purple, bottom deepens to convey depth */
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* ── App-level utilities ────────────────────────────────────────────────── */
+
+/* Lobby gradient background */
 .lobby-bg {
   background: linear-gradient(160deg, #f0e8ff 0%, #ddd0f8 50%, #e8d5f5 100%);
 }
 
-/* Logo gradient */
+/* Logo gradient pill */
 .logo-gradient {
   background: linear-gradient(135deg, #630ed4, #ae397b);
   box-shadow: 0 8px 24px rgba(99, 14, 212, 0.35);
 }
 
-/* Card shadow */
-.card-shadow {
-  box-shadow: 0 4px 32px rgba(99, 14, 212, 0.10);
-}
+/* ── Button variants (extend shadcn Button via CSS layer) ───────────────── */
 
-/* Primary button */
+/* Primary — purple gradient with lift on hover */
 .btn-primary {
   background: linear-gradient(135deg, #630ed4, #7c3aed);
   box-shadow: 0 6px 20px rgba(99, 14, 212, 0.4);
   color: #ffffff;
+  transition: transform 0.15s, box-shadow 0.15s;
 }
-.btn-primary:not(:disabled):hover {
-  transform: translateY(-2px);
-}
-.btn-primary:not(:disabled):active {
-  transform: scale(0.95);
-}
+.btn-primary:not(:disabled):hover  { transform: translateY(-2px); }
+.btn-primary:not(:disabled):active { transform: scale(0.95); }
 
-/* Secondary button (yellow) */
-.btn-secondary {
+/* Secondary — yellow with lift on hover */
+.btn-secondary-custom {
   background: #fed01b;
   box-shadow: 0 4px 16px rgba(254, 208, 27, 0.45);
   color: #121c2a;
+  transition: transform 0.15s, box-shadow 0.15s;
 }
-.btn-secondary:not(:disabled):hover {
-  transform: translateY(-2px);
-}
-.btn-secondary:not(:disabled):active {
-  transform: scale(0.95);
-}
+.btn-secondary-custom:not(:disabled):hover  { transform: translateY(-2px); }
+.btn-secondary-custom:not(:disabled):active { transform: scale(0.95); }
 
-/* Lobby cards */
-.lobby-card-purple {
+/* ── Card variants ──────────────────────────────────────────────────────── */
+
+/* Purple-accented card — used in CreateCard and player "me" badge */
+.card-purple {
   background: #ffffff;
-  border: 2px solid #7c3aed;
+  border: 2px solid #630ed4;
   box-shadow: 0 4px 24px rgba(99, 14, 212, 0.10);
 }
-.lobby-card-yellow {
+
+/* Yellow-accented card — used in JoinCard and partner badge */
+.card-yellow {
   background: #ffffff;
   border: 2px solid #fed01b;
   box-shadow: 0 4px 24px rgba(254, 208, 27, 0.15);
 }
 
-/* Outlined button */
-.btn-outline {
-  background: #ffffff;
-  border: 1.5px solid #630ed4;
-  color: #630ed4;
-}
-.btn-outline:not(:disabled):hover {
-  background: #f3e8ff;
-}
-.btn-outline:not(:disabled):active {
-  transform: scale(0.95);
+/* ── Rainbow animated border (QuestionCard) ─────────────────────────────── */
+
+@property --border-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
 }
 
-/* Progress bar — width driven by --progress CSS variable set inline */
+@keyframes rainbow-spin {
+  0%   { --border-angle: 0deg; }
+  100% { --border-angle: 360deg; }
+}
+
+/* Outer container — the gradient spins behind it */
+.question-card-animated {
+  position: relative;
+  background: #ffffff;
+  box-shadow: 0 8px 32px rgba(99, 14, 212, 0.15);
+  isolation: isolate;
+}
+
+/* Spinning conic gradient sits 3px outside the card */
+.question-card-animated::before {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: inherit;
+  background: conic-gradient(
+    from var(--border-angle, 0deg),
+    #630ed4,
+    #ae397b,
+    #fed01b,
+    #22d3ee,
+    #630ed4
+  );
+  animation: rainbow-spin 3s linear infinite;
+  z-index: -1;
+}
+
+/* White fill inset 2px — creates the "border" gap */
+.question-card-animated::after {
+  content: '';
+  position: absolute;
+  inset: 2px;
+  border-radius: inherit;
+  background: #ffffff;
+  z-index: -1;
+}
+
+/* ── Progress bar ───────────────────────────────────────────────────────── */
+
+/* Width driven by --progress CSS variable; transition lives here, not inline */
 .progress-bar {
   height: 100%;
   border-radius: 9999px;
-  background-color: var(--color-primary);
+  background-color: var(--color-brand-purple);
   width: var(--progress, 0%);
   transition: width 0.3s ease;
 }
 
-/* Timer circle — large countdown number displayed during game rounds */
+/* ── Timer ──────────────────────────────────────────────────────────────── */
+
 .timer-display {
   width: 56px;
   height: 56px;
   border-radius: 9999px;
-  border: 3px solid var(--color-primary);
+  border: 3px solid var(--color-brand-purple);
   background: var(--color-surface-low);
-  color: var(--color-primary);
+  color: var(--color-brand-purple);
   font-size: 1.25rem;
   font-weight: 800;
   display: flex;
@@ -119,19 +227,45 @@ html, body, #root {
   transition: border-color 0.3s, color 0.3s;
 }
 
-/* Timer turns red and pulses when 5 seconds or less remain */
 .timer-urgent {
   border-color: #ef4444;
   color: #ef4444;
   animation: pulse-urgent 0.6s ease-in-out infinite;
 }
 
-/* Custom transition duration for tip fade */
-.duration-400 {
-  transition-duration: 400ms;
+/* ── Answer option buttons ──────────────────────────────────────────────── */
+
+.answer-option {
+  background: #ffffff;
+  border: 2px solid var(--color-outline);
+  color: var(--color-on-surface);
+  transition: border-color 0.15s, background 0.15s;
+}
+.answer-option:not(:disabled):hover {
+  border-color: var(--color-brand-purple);
+  background: #f3e8ff;
 }
 
-/* Waving hand animation for the lobby waiting screen */
+.answer-option-selected {
+  border-color: var(--color-brand-purple);
+  background: #ede9fe;
+}
+
+.answer-option-correct {
+  border-color: #16a34a;
+  background: #f0fdf4;
+  color: #15803d;
+}
+
+.answer-option-wrong {
+  border-color: #ef4444;
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+/* ── Misc ───────────────────────────────────────────────────────────────── */
+
+/* Waving hand animation */
 @keyframes wave {
   0%, 100% { transform: rotate(0deg); }
   20%       { transform: rotate(20deg); }
@@ -143,48 +277,4 @@ html, body, #root {
 @keyframes pulse-urgent {
   0%, 100% { transform: scale(1); }
   50%       { transform: scale(1.1); }
-}
-
-/* Answer option button — normal state */
-.answer-option {
-  background: #ffffff;
-  border: 2px solid var(--color-outline);
-  color: var(--color-on-surface);
-  transition: border-color 0.15s, background 0.15s;
-}
-.answer-option:not(:disabled):hover {
-  border-color: var(--color-primary);
-  background: #f3e8ff;
-}
-
-/* Answer option — selected by the guesser */
-.answer-option-selected {
-  border-color: var(--color-primary);
-  background: #ede9fe;
-}
-
-/* Answer option — revealed as the correct answer */
-.answer-option-correct {
-  border-color: #16a34a;
-  background: #f0fdf4;
-  color: #15803d;
-}
-
-/* Answer option — the guesser's wrong pick */
-.answer-option-wrong {
-  border-color: #ef4444;
-  background: #fef2f2;
-  color: #dc2626;
-}
-
-/* Input field */
-.game-input {
-  background: #eff4ff;
-  border: 2px solid transparent;
-  color: #121c2a;
-  transition: border-color 0.15s;
-}
-.game-input:focus {
-  border-color: #7c3aed;
-  outline: none;
 }

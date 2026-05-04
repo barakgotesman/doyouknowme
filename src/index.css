@@ -1,1 +1,175 @@
 @import "tailwindcss";
+
+@theme {
+  --font-sans: 'Plus Jakarta Sans', sans-serif;
+
+  --color-primary: #630ed4;
+  --color-primary-container: #7c3aed;
+  --color-secondary: #fed01b;
+  --color-tertiary: #ae397b;
+  --color-surface: #f8f9ff;
+  --color-surface-low: #eff4ff;
+  --color-surface-container: #e6eeff;
+  --color-on-surface: #121c2a;
+  --color-on-surface-variant: #4a4455;
+  --color-outline: #ccc3d8;
+  --color-outline-variant: #7b7487;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+  background-color: #f8f9ff;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+/* Lobby gradient background */
+.lobby-bg {
+  background: linear-gradient(160deg, #f8f9ff 0%, #ede0ff 100%);
+}
+
+/* Logo gradient */
+.logo-gradient {
+  background: linear-gradient(135deg, #630ed4, #ae397b);
+  box-shadow: 0 8px 24px rgba(99, 14, 212, 0.35);
+}
+
+/* Card shadow */
+.card-shadow {
+  box-shadow: 0 4px 32px rgba(99, 14, 212, 0.10);
+}
+
+/* Primary button */
+.btn-primary {
+  background: linear-gradient(135deg, #630ed4, #7c3aed);
+  box-shadow: 0 6px 20px rgba(99, 14, 212, 0.4);
+  color: #ffffff;
+}
+.btn-primary:not(:disabled):hover {
+  transform: translateY(-2px);
+}
+.btn-primary:not(:disabled):active {
+  transform: scale(0.95);
+}
+
+/* Secondary button (yellow) */
+.btn-secondary {
+  background: #fed01b;
+  box-shadow: 0 4px 16px rgba(254, 208, 27, 0.45);
+  color: #121c2a;
+}
+.btn-secondary:not(:disabled):hover {
+  transform: translateY(-2px);
+}
+.btn-secondary:not(:disabled):active {
+  transform: scale(0.95);
+}
+
+/* Lobby cards */
+.lobby-card-purple {
+  background: #ffffff;
+  border: 2px solid #7c3aed;
+  box-shadow: 0 4px 24px rgba(99, 14, 212, 0.10);
+}
+.lobby-card-yellow {
+  background: #ffffff;
+  border: 2px solid #fed01b;
+  box-shadow: 0 4px 24px rgba(254, 208, 27, 0.15);
+}
+
+/* Outlined button */
+.btn-outline {
+  background: #ffffff;
+  border: 1.5px solid #630ed4;
+  color: #630ed4;
+}
+.btn-outline:not(:disabled):hover {
+  background: #f3e8ff;
+}
+.btn-outline:not(:disabled):active {
+  transform: scale(0.95);
+}
+
+/* Progress bar — width driven by --progress CSS variable set inline */
+.progress-bar {
+  height: 100%;
+  border-radius: 9999px;
+  background-color: var(--color-primary);
+  width: var(--progress, 0%);
+  transition: width 0.3s ease;
+}
+
+/* Timer circle — large countdown number displayed during game rounds */
+.timer-display {
+  width: 56px;
+  height: 56px;
+  border-radius: 9999px;
+  border: 3px solid var(--color-primary);
+  background: var(--color-surface-low);
+  color: var(--color-primary);
+  font-size: 1.25rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.3s, color 0.3s;
+}
+
+/* Timer turns red and pulses when 5 seconds or less remain */
+.timer-urgent {
+  border-color: #ef4444;
+  color: #ef4444;
+  animation: pulse-urgent 0.6s ease-in-out infinite;
+}
+
+@keyframes pulse-urgent {
+  0%, 100% { transform: scale(1); }
+  50%       { transform: scale(1.1); }
+}
+
+/* Answer option button — normal state */
+.answer-option {
+  background: #ffffff;
+  border: 2px solid var(--color-outline);
+  color: var(--color-on-surface);
+  transition: border-color 0.15s, background 0.15s;
+}
+.answer-option:not(:disabled):hover {
+  border-color: var(--color-primary);
+  background: #f3e8ff;
+}
+
+/* Answer option — selected by the guesser */
+.answer-option-selected {
+  border-color: var(--color-primary);
+  background: #ede9fe;
+}
+
+/* Answer option — revealed as the correct answer */
+.answer-option-correct {
+  border-color: #16a34a;
+  background: #f0fdf4;
+  color: #15803d;
+}
+
+/* Answer option — the guesser's wrong pick */
+.answer-option-wrong {
+  border-color: #ef4444;
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+/* Input field */
+.game-input {
+  background: #eff4ff;
+  border: 2px solid transparent;
+  color: #121c2a;
+  transition: border-color 0.15s;
+}
+.game-input:focus {
+  border-color: #7c3aed;
+  outline: none;
+}

@@ -1,8 +1,33 @@
+import type { PlayerRole } from '../types'
+
+// Excludes easily-confused characters (I, O, 0, 1) to avoid player mistakes when sharing codes
 const ROOM_CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ'
 
+/**
+ * Generates a random 4-letter room code (e.g. "XKZT").
+ * Used when Player A creates a new game room.
+ */
 export function generateRoomCode(): string {
   return Array.from(
     { length: 4 },
     () => ROOM_CODE_CHARS[Math.floor(Math.random() * ROOM_CODE_CHARS.length)]
   ).join('')
+}
+
+/**
+ * Returns which player role is the "subject" (the one being guessed about) for a given round.
+ * Odd rounds → Player A is subject; even rounds → Player B is subject.
+ * This alternation is deterministic so both clients agree without coordination.
+ */
+export function subjectRoleForRound(num: number): PlayerRole {
+  return num % 2 === 1 ? 'A' : 'B'
+}
+
+/**
+ * Maps a round number to an index into the subject's setup answers array.
+ * Each player answered 10 questions, and each answer covers 2 rounds (one as subject, one as guesser).
+ *   Round 1 → index 0, Round 2 → index 0, Round 3 → index 1, Round 4 → index 1, etc.
+ */
+export function questionIndexForRound(num: number): number {
+  return Math.floor((num - 1) / 2)
 }

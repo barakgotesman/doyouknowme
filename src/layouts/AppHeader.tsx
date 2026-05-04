@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { setGlobalVolume, getSavedVolume, isMuted } from '../hooks/useAudio'
+import { SettingsIcon, VolumeOffIcon, VolumeLowIcon, VolumeMedIcon, VolumeHighIcon } from '../components/ui/Icons'
 
 /**
  * Global site header — rendered on every screen via App.tsx.
@@ -27,11 +28,11 @@ export default function AppHeader() {
     setGlobalVolume(val)
   }
 
-  function volumeIcon() {
-    if (volume === 0) return '🔇'
-    if (volume < 0.4) return '🔈'
-    if (volume < 0.75) return '🔉'
-    return '🔊'
+  function VolumeIcon() {
+    if (volume === 0)    return <VolumeOffIcon className="w-5 h-5" />
+    if (volume < 0.4)   return <VolumeLowIcon className="w-5 h-5" />
+    if (volume < 0.75)  return <VolumeMedIcon className="w-5 h-5" />
+    return <VolumeHighIcon className="w-5 h-5" />
   }
 
   return (
@@ -39,17 +40,17 @@ export default function AppHeader() {
       <div className="relative" ref={dropdownRef}>
         <button
           onClick={() => setOpen(o => !o)}
-          className="text-xl text-on-surface-variant hover:text-primary transition-colors"
+          className="text-on-surface-variant hover:text-primary transition-colors p-1"
           title="הגדרות"
         >
-          ⚙️
+          <SettingsIcon className="w-5 h-5" />
         </button>
 
         {open && (
-          <div className="absolute top-10 right-0 bg-white rounded-2xl shadow-lg border border-outline/20 p-4 w-52 flex flex-col gap-3 z-50" dir="rtl">
+          <div className="absolute top-10 right-0 bg-white rounded-2xl shadow-lg border border-outline/20 p-4 w-52 flex flex-col gap-3 z-[200]" dir="rtl">
             <p className="text-xs font-bold text-on-surface-variant uppercase tracking-wide">עוצמת מוזיקה</p>
             <div className="flex items-center gap-3">
-              <span className="text-lg">{volumeIcon()}</span>
+              <span className="text-on-surface-variant"><VolumeIcon /></span>
               <input
                 type="range"
                 min="0"

@@ -1,5 +1,6 @@
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { ThinkIcon } from '../ui/Icons'
 
 /**
  * Card displaying the current setup question and its multiple-choice answer buttons.
@@ -18,7 +19,7 @@ export default function QuestionCard({
     <Card className="question-card-animated rounded-3xl">
       <CardContent className="flex flex-col gap-5 p-6">
         <div className="flex flex-col gap-2 text-center">
-          <span className="text-3xl">🤔</span>
+          <ThinkIcon className="w-8 h-8 mx-auto text-primary" />
           <h2 className="text-lg font-extrabold text-foreground leading-snug">{question}</h2>
           <p className="text-xs text-muted-foreground">ענה על עצמך — חברך ינחש בהמשך</p>
         </div>

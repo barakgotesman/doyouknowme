@@ -60,7 +60,7 @@ export function useRoom() {
         .channel(`game:${code}`)
         .on('broadcast', { event: 'player_joined' }, () => {
           channelRef.current?.unsubscribe()
-          navigate('/setup')
+          navigate('/setup', { replace: true })
         })
         .subscribe()
 
@@ -105,7 +105,7 @@ export function useRoom() {
       sessionStorage.setItem('player_id', player.id)
       sessionStorage.setItem('room_code', code)
       sessionStorage.setItem('player_role', 'B')
-      navigate('/setup')
+      navigate('/setup', { replace: true })
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'שגיאה בהצטרפות למשחק')
     } finally {

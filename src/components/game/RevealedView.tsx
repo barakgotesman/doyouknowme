@@ -1,4 +1,5 @@
 import type { Question, PlayerRole } from '../../types'
+import { CheckIcon, XIcon, ClockIcon } from '../ui/Icons'
 
 /**
  * Shown to BOTH players after an answer is submitted or a timeout fires.
@@ -19,21 +20,24 @@ export default function RevealedView({
   myRole: PlayerRole
   myName: string
 }) {
-  // Determine whose answers were being guessed to label the question correctly
   const subjectName = subjectRole === myRole ? myName : partnerName
 
-  // Build the result banner text depending on who I am and what happened
-  const resultText = isAnswering
-    ? (isCorrect ? '✅ נכון! +1 נקודה' : submittedAnswer ? '❌ לא נכון' : '⏱ פג הזמן!')
-    : (isCorrect ? `✅ ${partnerName} צדק/ה!` : submittedAnswer ? `❌ ${partnerName} טעה/תה` : `⏱ ${partnerName} לא הספיק/ה`)
+  const isTimeout = !submittedAnswer
 
   return (
     <div className="w-full max-w-lg flex flex-col gap-5">
-      {/* Coloured result banner */}
-      <div className={`rounded-2xl p-4 text-center font-extrabold text-base ${
-        isCorrect ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'
+      {/* Result banner */}
+      <div className={`rounded-2xl p-4 flex items-center justify-center gap-2 font-extrabold text-base ${
+        isCorrect ? 'bg-green-50 text-green-700 border border-green-200'
+        : isTimeout ? 'bg-amber-50 text-amber-700 border border-amber-200'
+        : 'bg-red-50 text-red-700 border border-red-200'
       }`}>
-        {resultText}
+        {isTimeout
+          ? <><ClockIcon className="w-5 h-5" /><span>{isAnswering ? 'פג הזמן!' : `${partnerName} לא הספיק/ה`}</span></>
+          : isCorrect
+            ? <><CheckIcon className="w-5 h-5" /><span>{isAnswering ? 'נכון! +1 נקודה' : `${partnerName} צדק/ה!`}</span></>
+            : <><XIcon className="w-5 h-5" /><span>{isAnswering ? 'לא נכון' : `${partnerName} טעה/תה`}</span></>
+        }
       </div>
 
       <div className="lobby-card-purple rounded-3xl p-6 flex flex-col gap-4">
@@ -44,7 +48,6 @@ export default function RevealedView({
 
         <div className="flex flex-col gap-2">
           {question.options.map(option => {
-            // Apply green/red highlight to indicate correct and wrong picks
             const isCorrectOption  = option === correctAnswer
             const isSubmittedWrong = option === submittedAnswer && !isCorrect
 
@@ -53,10 +56,10 @@ export default function RevealedView({
             if (isSubmittedWrong) className = 'answer-option-wrong w-full py-3 px-4 rounded-xl text-sm font-bold text-right'
 
             return (
-              <div key={option} className={className} dir="rtl">
-                {option}
-                {isCorrectOption  && ' ✓'}
-                {isSubmittedWrong && ' ✗'}
+              <div key={option} className={`${className} flex items-center justify-between`} dir="rtl">
+                <span>{option}</span>
+                {isCorrectOption  && <CheckIcon className="w-4 h-4 text-green-600 shrink-0" />}
+                {isSubmittedWrong && <XIcon     className="w-4 h-4 text-red-500 shrink-0" />}
               </div>
             )
           })}

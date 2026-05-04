@@ -1,4 +1,5 @@
 import { useGame } from '../hooks/useGame'
+import { useAudio } from '../hooks/useAudio'
 import LoadingScreen from './ui/LoadingScreen'
 import ErrorScreen from './ui/ErrorScreen'
 import ScoreHeader from './game/ScoreHeader'
@@ -15,6 +16,8 @@ import RevealedView from './game/RevealedView'
  * All game logic lives in useGame — this component is purely presentational routing.
  */
 export default function GameRound() {
+  useAudio('gameplay')
+
   const {
     loading, error,
     roundNumber, phase, subjectRole, isAnswering,
@@ -29,7 +32,7 @@ export default function GameRound() {
   if (!question || phase === 'loading') return <LoadingScreen message="טוען משחק..." />
 
   return (
-    <div className="lobby-bg min-h-screen flex flex-col" dir="rtl">
+    <>
       {/* Scoreboard always visible at the top */}
       <ScoreHeader
         myName={myName}
@@ -39,7 +42,7 @@ export default function GameRound() {
         roundNumber={roundNumber}
       />
 
-      <main className="flex-1 flex flex-col items-center justify-center px-5 py-6 gap-5">
+      <div className="flex-1 flex flex-col items-center justify-center px-5 py-6 gap-5">
         {/* Route to the correct view for the current phase + role */}
         {phase === 'revealed' ? (
           <RevealedView
@@ -67,7 +70,7 @@ export default function GameRound() {
             startedAt={startedAt!}
           />
         )}
-      </main>
-    </div>
+      </div>
+    </>
   )
 }

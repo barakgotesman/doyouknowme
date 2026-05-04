@@ -145,11 +145,18 @@ export function useGame() {
    */
   async function initGame() {
     try {
-      // Fetch room by code to get its UUID
+      // Fetch room by code to get its UUID and status
       const { data: room, error: roomErr } = await supabase
-        .from('rooms').select('id').eq('code', roomCode).single()
+        .from('rooms').select('id, status').eq('code', roomCode).single()
       if (roomErr || !room) throw roomErr ?? new Error('Room not found')
       roomIdRef.current = room.id
+
+      // If the room is already finished, this player shouldn't be on the game screen —
+      // send them home rather than assuming the sessionStorage belongs to their finished game.
+      if (room.status === 'finished') {
+        navigate('/', { replace: true })
+        return
+      }
 
       // Fetch both players in the room
       const { data: players, error: playersErr } = await supabase
@@ -247,7 +254,7 @@ export function useGame() {
     } else if (lastRound && lastRound.round_number === 20) {
       // All rounds done — go to results
       setPhase('finished')
-      navigate('/results')
+      navigate('/results', { replace: true })
     }
   }
 
@@ -278,12 +285,15 @@ export function useGame() {
       console.warn(`Round ${num} insert failed (may already exist):`, insertErr.message)
     }
 
-    // Broadcast to both clients (including ourselves via the handler below)
+    // Broadcast to the partner (Supabase doesn't echo back to sender, so we call the handler directly)
     await supabase.channel(`game:${roomCode}`).send({
       type: 'broadcast',
       event: 'round_start',
       payload: { round_number: num, started_at },
     })
+
+    // Apply the round locally — the partner receives it via the broadcast handler above
+    handleRoundStart(num, started_at)
   }
 
   /**
@@ -440,7 +450,7 @@ export function useGame() {
   async function endGame() {
     setPhase('finished')
     await supabase.from('rooms').update({ status: 'finished' }).eq('id', roomIdRef.current)
-    navigate('/results')
+    navigate('/results', { replace: true })
   }
 
   // ── Derived ────────────────────────────────────────────────────────────────

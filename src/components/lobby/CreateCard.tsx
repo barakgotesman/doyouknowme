@@ -1,5 +1,6 @@
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { SmileIcon } from '../ui/Icons'
 
 /**
  * Card for creating a new game room.
@@ -16,7 +17,7 @@ export default function CreateCard({
     <Card className="card-purple flex-1">
       <CardContent className="flex flex-col gap-4 p-5">
         <div className="flex items-center gap-2">
-          <span className="text-xl">😊</span>
+          <SmileIcon className="w-6 h-6 text-primary" />
           <div>
             <p className="text-sm font-extrabold text-foreground">התחל משחק חדש</p>
             <p className="text-xs text-muted-foreground">צור חדר ושתף את הקוד לחבר</p>

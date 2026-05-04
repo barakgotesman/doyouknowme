@@ -44,7 +44,7 @@ export function useSetup() {
    */
   function maybeAdvanceToGame() {
     if (doneRef.current && partnerDoneRef.current) {
-      navigate('/game')
+      navigate('/game', { replace: true })
     }
   }
 

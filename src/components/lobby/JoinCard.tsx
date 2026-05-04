@@ -1,6 +1,7 @@
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { KeyIcon } from '../ui/Icons'
 
 /**
  * Card for joining an existing room by entering a 4-letter code.
@@ -21,7 +22,7 @@ export default function JoinCard({
     <Card className="card-yellow flex-1">
       <CardContent className="flex flex-col gap-4 p-5">
         <div className="flex items-center gap-2">
-          <span className="text-xl">🔑</span>
+          <KeyIcon className="w-6 h-6 text-primary" />
           <div>
             <p className="text-sm font-extrabold text-foreground">הצטרף למשחק</p>
             <p className="text-xs text-muted-foreground">יש לך קוד חדר? הכנס אותו כאן</p>
@@ -29,7 +30,6 @@ export default function JoinCard({
         </div>
 
         <form onSubmit={onSubmit} className="flex flex-col gap-3">
-          {/* Room code input — uppercase, centered, wide letter-spacing */}
           <Input
             type="text"
             value={roomCode}
@@ -49,7 +49,6 @@ export default function JoinCard({
             {loading ? '...' : 'הצטרף למשחק'}
           </Button>
 
-          {/* Tell the user exactly what's still missing */}
           {!name.trim() && (
             <p className="text-xs text-muted-foreground text-center">יש להכניס שם למעלה תחילה</p>
           )}

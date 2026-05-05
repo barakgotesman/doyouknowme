@@ -122,6 +122,10 @@ export function useRoom() {
         .select().single()
       if (playerErr || !player) throw playerErr ?? new Error('Failed to join room')
 
+      // Transition room to 'setup' so SessionRestorer can correctly identify
+      // the phase if either player navigates away and comes back via '/'
+      await supabase.from('rooms').update({ status: 'setup' }).eq('id', room.id)
+
       // Signal Player A that someone joined — triggers their navigation to /setup
       await supabase.channel(`game:${code}`).send({
         type: 'broadcast',

@@ -10,16 +10,16 @@ export default function AfkWarning({
   onLeave: () => void
 }) {
   return (
-    <div className="rounded-2xl border border-amber-300 bg-amber-50 px-4 py-3 flex flex-col gap-3 text-center">
-      <p className="text-sm font-bold text-amber-800">
+    <div className="rounded-2xl border border-secondary-container bg-secondary-fixed px-4 py-3 flex flex-col gap-3 text-center">
+      <p className="text-sm font-bold text-on-secondary-container">
         {partnerName || 'החבר שלך'} לא פעיל/ה כבר יותר מ-2 דקות
       </p>
-      <p className="text-xs text-amber-700 font-medium">
+      <p className="text-xs text-on-secondary-container/80 font-medium">
         ייתכן שהם עזבו. תרצה/י לסגור את המשחק?
       </p>
       <button
         onClick={onLeave}
-        className="w-full py-2 rounded-xl text-sm font-bold bg-red-600 hover:bg-red-700 active:scale-95 text-white transition-all"
+        className="btn-destructive w-full py-2 rounded-xl text-sm font-bold disabled:opacity-60"
       >
         כן, עזוב את המשחק
       </button>

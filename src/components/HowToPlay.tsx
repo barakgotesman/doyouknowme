@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { useAudio } from '../hooks/useAudio'
 import { TrophyIcon, KeyIcon, SmileIcon, CheckIcon, HeartIcon, BrainIcon } from './ui/Icons'
 
@@ -26,6 +26,7 @@ function Step({ number, icon, title, desc }: { number: number; icon: React.React
  * Purely presentational — no DB or Realtime interaction.
  */
 export default function HowToPlay() {
+  const navigate = useNavigate()
   useAudio('lobby')
 
   return (
@@ -92,13 +93,13 @@ export default function HowToPlay() {
         ))}
       </div>
 
-      {/* CTA back to home */}
-      <Link
-        to="/"
+      {/* Go back — returns to wherever the player came from (home, setup, etc.) */}
+      <button
+        onClick={() => navigate(-1)}
         className="btn-primary px-8 py-3 rounded-full text-sm font-bold"
       >
         יאללה, נתחיל לשחק
-      </Link>
+      </button>
     </div>
   )
 }

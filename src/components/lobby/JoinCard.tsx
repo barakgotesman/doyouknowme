@@ -37,7 +37,7 @@ export default function JoinCard({
             placeholder="A B C D"
             maxLength={4}
             dir="ltr"
-            className="text-center text-xl font-extrabold tracking-[0.3em] bg-surface-low border-2 border-transparent focus-visible:border-primary focus-visible:ring-0 h-12"
+            className="text-center text-xl font-extrabold tracking-[0.3em] bg-surface-low border-2 border-transparent focus-visible:border-secondary-container focus-visible:ring-0 h-12"
           />
 
           <Button

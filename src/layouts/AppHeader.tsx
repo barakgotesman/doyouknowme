@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { setGlobalVolume, getSavedVolume, isMuted, toggleMute } from '../hooks/useAudio'
 import { SettingsIcon, VolumeOffIcon, VolumeLowIcon, VolumeMedIcon, VolumeHighIcon } from '../components/ui/Icons'
 import {
@@ -7,65 +7,11 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { supabase } from '../lib/supabase'
-
-// Routes where the game is actively running — no banner needed on these
-const GAME_ROUTES = ['/', '/setup', '/game', '/results']
 
 /**
  * Global site header — rendered on every screen via App.tsx.
  * Layout: logo (left) | nav links (center) | settings dropdown (right).
  */
-/**
- * Shows a "חזרה למשחק" pill whenever the player has an active session
- * but is browsing a non-game page (e.g. how-to-play).
- * Clicking it re-runs session restore logic to navigate back to the right screen.
- */
-function ReturnToGameBanner() {
-  const location = useLocation()
-  const navigate  = useNavigate()
-  const [active, setActive] = useState(false)
-
-  useEffect(() => {
-    // Only show on pages outside the game flow
-    if (GAME_ROUTES.includes(location.pathname)) { setActive(false); return }
-
-    const roomCode = sessionStorage.getItem('room_code')
-    const playerId = sessionStorage.getItem('player_id')
-    if (!roomCode || !playerId) { setActive(false); return }
-
-    // Verify the room is still live before showing the banner
-    supabase.from('rooms').select('status').eq('code', roomCode).maybeSingle()
-      .then(({ data: room }) => {
-        setActive(!!room && room.status !== 'abandoned')
-      })
-  }, [location.pathname])
-
-  if (!active) return null
-
-  function handleReturn() {
-    const roomCode = sessionStorage.getItem('room_code')
-    if (!roomCode) return
-    supabase.from('rooms').select('status').eq('code', roomCode).maybeSingle()
-      .then(({ data: room }) => {
-        if (!room || room.status === 'abandoned') { setActive(false); return }
-        if (room.status === 'waiting')  navigate('/', { state: { restoreWaiting: true, roomCode } })
-        else if (room.status === 'setup')   navigate('/setup')
-        else if (room.status === 'playing') navigate('/game')
-        else if (room.status === 'finished') navigate('/results')
-      })
-  }
-
-  return (
-    <button
-      onClick={handleReturn}
-      className="btn-primary px-4 py-1.5 rounded-full text-xs font-bold animate-pulse"
-      dir="rtl"
-    >
-      חזרה למשחק ←
-    </button>
-  )
-}
 
 export default function AppHeader() {
   const [volume, setVolume] = useState(() => isMuted() ? 0 : getSavedVolume())
@@ -107,7 +53,6 @@ export default function AppHeader() {
       {/* Nav links — desktop only */}
       <nav className="hidden md:flex items-center gap-6 text-sm font-semibold text-on-surface-variant">
         <Link to="/how-to-play" className="hover:text-primary transition-colors">איך משחקים</Link>
-        <ReturnToGameBanner />
       </nav>
 
       {/* Settings dropdown */}

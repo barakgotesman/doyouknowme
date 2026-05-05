@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { BrowserRouter, Routes, Route, useNavigate, useLocation } from 'react-router-dom'
 import AppHeader from './layouts/AppHeader'
 import AppFooter from './layouts/AppFooter'
+import ReturnToGameFab from './components/ui/ReturnToGameFab'
 import Lobby from './components/Lobby'
 import Setup from './components/Setup'
 import GameRound from './components/GameRound'
@@ -65,6 +66,7 @@ export default function App() {
       <div className="lobby-bg min-h-screen flex flex-col" dir="rtl">
         <AppHeader />
         <SessionRestorer />
+        <ReturnToGameFab />
         <main className="flex-1 flex flex-col">
           <Routes>
             <Route path="/" element={<Lobby />} />

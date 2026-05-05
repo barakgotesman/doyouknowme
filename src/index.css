@@ -248,6 +248,16 @@ html, body, #root {
 .btn-secondary-custom:not(:disabled):hover  { transform: translateY(-4px); }
 .btn-secondary-custom:not(:disabled):active { transform: scale(0.95); }
 
+/* Destructive — error red, same motion as primary */
+.btn-destructive {
+  background: var(--color-error);
+  box-shadow: 0 6px 20px rgba(186, 26, 26, 0.35);
+  color: var(--color-on-error);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.btn-destructive:not(:disabled):hover  { transform: translateY(-4px); box-shadow: 0 10px 28px rgba(186, 26, 26, 0.45); }
+.btn-destructive:not(:disabled):active { transform: scale(0.95); box-shadow: 0 2px 8px rgba(186, 26, 26, 0.25); }
+
 /* ── Card variants ──────────────────────────────────────────────────────── */
 
 .card-purple {

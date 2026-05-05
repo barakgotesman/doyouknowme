@@ -1,5 +1,5 @@
-import { useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useEffect, useRef, useState } from 'react'
+import { useNavigate, useLocation } from 'react-router-dom'
 import type { RealtimeChannel } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
 import { generateRoomCode } from '../lib/gameUtils'
@@ -10,6 +10,7 @@ import { generateRoomCode } from '../lib/gameUtils'
  */
 export function useRoom() {
   const navigate = useNavigate()
+  const location = useLocation()
 
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -19,6 +20,32 @@ export function useRoom() {
 
   // Holds the active Realtime channel while Player A waits, so we can unsubscribe on cancel
   const channelRef = useRef<RealtimeChannel | null>(null)
+
+  /**
+   * On mount, check if SessionRestorer redirected here with a restoreWaiting flag.
+   * If so, Player A refreshed the page while waiting — restore the waiting UI and
+   * re-subscribe to the Realtime channel so they still receive the player_joined event.
+   */
+  useEffect(() => {
+    const state = location.state as { restoreWaiting?: boolean; roomCode?: string } | null
+    if (!state?.restoreWaiting || !state.roomCode) return
+
+    // Clear the location state so a manual "/" navigation doesn't retrigger this
+    window.history.replaceState({}, '', '/')
+
+    const code = state.roomCode
+    setWaitingCode(code)
+
+    channelRef.current = supabase
+      .channel(`game:${code}`)
+      .on('broadcast', { event: 'player_joined' }, () => {
+        channelRef.current?.unsubscribe()
+        navigate('/setup', { replace: true })
+      })
+      .subscribe()
+
+    return () => { channelRef.current?.unsubscribe() }
+  }, [])
 
   /**
    * Creates a new room as Player A.

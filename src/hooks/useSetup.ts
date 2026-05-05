@@ -1,7 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { useLeaveGame } from './useLeaveGame'
 import type { Question } from '../types'
+
+/** How long (ms) a partner can be idle before the AFK warning is shown */
+const AFK_TIMEOUT_MS = 2 * 60 * 1000
 
 /** Represents one player's display info and setup progress shown in the status bar */
 export interface PlayerStatus {
@@ -16,6 +20,7 @@ export interface PlayerStatus {
  */
 export function useSetup() {
   const navigate = useNavigate()
+  const { leaveGame } = useLeaveGame()
 
   // Read session from storage — set during lobby phase
   const playerId = sessionStorage.getItem('player_id') ?? ''
@@ -28,6 +33,7 @@ export function useSetup() {
   const [saving, setSaving] = useState(false)                   // true while an answer is being saved to DB
   const [error, setError] = useState<string | null>(null)
   const [done, setDone] = useState(false)                       // true after this player finishes all 10
+  const [partnerAfk, setPartnerAfk] = useState(false)           // true after partner is idle for AFK_TIMEOUT_MS
 
   // Player status objects shown in the UI — me and my partner
   const [myStatus, setMyStatus] = useState<PlayerStatus>({ name: '', progress: 0, done: false })
@@ -37,6 +43,10 @@ export function useSetup() {
   // If we used useState, the handlers would always see the initial value captured at subscribe time.
   const doneRef = useRef(false)
   const partnerDoneRef = useRef(false)
+
+  // Tracks when we last heard from the partner — used for AFK detection
+  const partnerLastSeenRef = useRef<number>(Date.now())
+  const afkTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   /**
    * Navigates to the game screen only when BOTH players have finished setup.
@@ -57,6 +67,15 @@ export function useSetup() {
 
     fetchQuestionsAndPlayers()
 
+    // Start AFK watchdog — fires after AFK_TIMEOUT_MS with no partner activity
+    function resetAfkTimer() {
+      partnerLastSeenRef.current = Date.now()
+      setPartnerAfk(false)
+      if (afkTimerRef.current) clearTimeout(afkTimerRef.current)
+      afkTimerRef.current = setTimeout(() => setPartnerAfk(true), AFK_TIMEOUT_MS)
+    }
+    resetAfkTimer()
+
     // Subscribe to the shared game channel to track partner progress and detect when they finish
     const channel = supabase
       .channel(`game:${roomCode}`)
@@ -64,29 +83,42 @@ export function useSetup() {
         // Only react to the OTHER player's progress updates
         if (payload.role !== playerRole) {
           setPartnerStatus(prev => ({ ...prev, progress: payload.count }))
+          resetAfkTimer() // partner is active — reset AFK countdown
         }
       })
       .on('broadcast', { event: 'setup_complete' }, ({ payload }) => {
-        // Only react to the OTHER player's completion event
-        if (payload.role !== playerRole) {
+        // Only react to the OTHER player's completion event; guard against duplicates
+        if (payload.role !== playerRole && !partnerDoneRef.current) {
           setPartnerStatus(prev => ({ ...prev, progress: 10, done: true }))
           partnerDoneRef.current = true
+          resetAfkTimer()
           maybeAdvanceToGame()
         }
       })
+      .on('broadcast', { event: 'game_abandoned' }, () => {
+        // Partner left the game — clear session and go home
+        sessionStorage.removeItem('player_id')
+        sessionStorage.removeItem('room_code')
+        sessionStorage.removeItem('player_role')
+        navigate('/', { replace: true })
+      })
       .subscribe()
 
-    // Unsubscribe when the component unmounts to avoid memory leaks
-    return () => { channel.unsubscribe() }
+    // Unsubscribe and clear AFK timer when the component unmounts
+    return () => {
+      channel.unsubscribe()
+      if (afkTimerRef.current) clearTimeout(afkTimerRef.current)
+    }
   }, [])
 
   /**
    * Fetches the 10 random questions and both players' display names in parallel.
-   * Players are needed to show the status bar with names.
+   * Also restores this player's progress from existing setup_answers in the DB
+   * so a page refresh doesn't restart the questionnaire from zero.
    */
   async function fetchQuestionsAndPlayers() {
     try {
-      // Fetch questions and room (to get room_id for player lookup) in parallel
+      // Fetch questions and room in parallel — room_id needed for player lookup
       const [questionsRes, roomRes] = await Promise.all([
         supabase.from('questions').select('*'),
         supabase.from('rooms').select('id').eq('code', roomCode).single(),
@@ -95,24 +127,68 @@ export function useSetup() {
       if (questionsRes.error) throw questionsRes.error
       if (roomRes.error) throw roomRes.error
 
-      // Shuffle using sort trick, then take first 10
-      const shuffled = [...(questionsRes.data ?? [])].sort(() => Math.random() - 0.5).slice(0, 10)
+      const roomId = roomRes.data.id
+
+      // Fetch players and this player's saved answers in parallel
+      const [playersRes, savedAnswersRes] = await Promise.all([
+        supabase.from('players').select('id, display_name, role, setup_done').eq('room_id', roomId),
+        supabase.from('setup_answers').select('question_id').eq('player_id', playerId),
+      ])
+
+      if (playersRes.error) throw playersRes.error
+
+      const players = playersRes.data ?? []
+      const me      = players.find(p => p.id === playerId)
+      const partner = players.find(p => p.id !== playerId)
+
+      // Build a set of question IDs already answered so we can skip them on resume
+      const answeredIds = new Set((savedAnswersRes.data ?? []).map(a => a.question_id))
+      const alreadyAnswered = answeredIds.size
+
+      // Shuffle all questions with a stable seed-independent sort, then take 10.
+      // On resume, filter out already-answered questions so the player continues where they left off.
+      const allQuestions = questionsRes.data ?? []
+      let shuffled: typeof allQuestions
+
+      if (alreadyAnswered > 0) {
+        // Restore: put answered questions first (in answered order isn't known, but we just need
+        // the remaining ones in the same relative order — a deterministic shuffle here isn't
+        // required because we'll jump currentIndex past the answered ones)
+        const unanswered = allQuestions.filter(q => !answeredIds.has(q.id))
+        const answered   = allQuestions.filter(q => answeredIds.has(q.id))
+        shuffled = [...answered, ...unanswered.sort(() => Math.random() - 0.5)].slice(0, 10)
+      } else {
+        shuffled = [...allQuestions].sort(() => Math.random() - 0.5).slice(0, 10)
+      }
+
       setQuestions(shuffled)
 
-      // Fetch both players in the room
-      const { data: players, error: playersErr } = await supabase
-        .from('players')
-        .select('id, display_name, role, setup_done')
-        .eq('room_id', roomRes.data.id)
+      // Restore progress index — jump past already-answered questions
+      if (alreadyAnswered > 0 && alreadyAnswered < 10) {
+        setCurrentIndex(alreadyAnswered)
+      }
 
-      if (playersErr) throw playersErr
+      if (me) {
+        const myDone = me.setup_done || alreadyAnswered >= 10
+        setMyStatus({ name: me.display_name, progress: alreadyAnswered, done: myDone })
+        if (myDone) {
+          doneRef.current = true
+          setDone(true)
+        }
+      }
 
-      // Split into "me" and "partner" based on the stored role
-      const me = players?.find(p => p.id === playerId)
-      const partner = players?.find(p => p.id !== playerId)
+      if (partner) {
+        setPartnerStatus({ name: partner.display_name, progress: 0, done: partner.setup_done })
+        if (partner.setup_done) {
+          // Partner already finished before we refreshed — mark them done immediately
+          partnerDoneRef.current = true
+        }
+      }
 
-      if (me) setMyStatus({ name: me.display_name, progress: 0, done: false })
-      if (partner) setPartnerStatus({ name: partner.display_name, progress: 0, done: partner.setup_done })
+      // If both were already done when we refreshed, go straight to the game
+      if (doneRef.current && partnerDoneRef.current) {
+        navigate('/game', { replace: true })
+      }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'שגיאה בטעינת נתונים')
     } finally {
@@ -131,10 +207,20 @@ export function useSetup() {
 
     setSaving(true)
     try {
-      const { error: saveErr } = await supabase
+      // Check if this answer was already saved (e.g. player refreshed mid-setup and is re-submitting)
+      const { data: existing } = await supabase
         .from('setup_answers')
-        .insert({ player_id: playerId, question_id: question.id, answer })
-      if (saveErr) throw saveErr
+        .select('id')
+        .eq('player_id', playerId)
+        .eq('question_id', question.id)
+        .maybeSingle()
+
+      if (!existing) {
+        const { error: saveErr } = await supabase
+          .from('setup_answers')
+          .insert({ player_id: playerId, question_id: question.id, answer })
+        if (saveErr) throw saveErr
+      }
 
       const newCount = currentIndex + 1 // number of questions answered after this one
       const isLast = newCount === questions.length
@@ -197,6 +283,8 @@ export function useSetup() {
     done,
     myStatus,
     partnerStatus,
+    partnerAfk,
     submitAnswer,
+    leaveGame,
   }
 }

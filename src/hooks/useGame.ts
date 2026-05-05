@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { useLeaveGame } from './useLeaveGame'
 import { subjectRoleForRound, questionIndexForRound } from '../lib/gameUtils'
 import type { Player, PlayerRole, Question } from '../types'
 
@@ -56,6 +57,7 @@ export interface GameState {
  */
 export function useGame() {
   const navigate = useNavigate()
+  const { leaveGame } = useLeaveGame()
 
   // Session values set during lobby
   const playerId   = sessionStorage.getItem('player_id')   ?? ''
@@ -130,6 +132,13 @@ export function useGame() {
       // Guesser's timer ran out — treat as a null answer
       .on('broadcast', { event: 'timeout' }, ({ payload }) => {
         handleAnswerSubmitted(payload.round_number, null, false)
+      })
+      // Partner left the game — clear session and go home
+      .on('broadcast', { event: 'game_abandoned' }, () => {
+        sessionStorage.removeItem('player_id')
+        sessionStorage.removeItem('room_code')
+        sessionStorage.removeItem('player_role')
+        navigate('/', { replace: true })
       })
       .subscribe()
 
@@ -478,5 +487,6 @@ export function useGame() {
     partnerScore,
     submitAnswer,
     handleTimeout,
+    leaveGame,
   }
 }

@@ -2,10 +2,12 @@ import { useSetup } from '../hooks/useSetup'
 import { useAudio } from '../hooks/useAudio'
 import LoadingScreen from './ui/LoadingScreen'
 import ErrorScreen from './ui/ErrorScreen'
+import LeaveGameButton from './ui/LeaveGameButton'
 import PlayersStatusBar from './setup/PlayersStatusBar'
 import ProgressHeader from './setup/ProgressHeader'
 import QuestionCard from './setup/QuestionCard'
 import WaitingScreen from './setup/WaitingScreen'
+import AfkWarning from './setup/AfkWarning'
 
 const TOTAL_QUESTIONS = 10
 
@@ -20,13 +22,20 @@ const TOTAL_QUESTIONS = 10
 export default function Setup() {
   const {
     questions, currentIndex, loading, saving, error, done,
-    myStatus, partnerStatus, submitAnswer,
+    myStatus, partnerStatus, partnerAfk, submitAnswer, leaveGame,
   } = useSetup()
   useAudio('setup')
 
   if (loading) return <LoadingScreen message="טוען שאלות..." />
   if (error)   return <ErrorScreen message={error} />
-  if (done)    return <WaitingScreen myStatus={myStatus} partnerStatus={partnerStatus} />
+  if (done)    return (
+    <WaitingScreen
+      myStatus={myStatus}
+      partnerStatus={partnerStatus}
+      partnerAfk={partnerAfk}
+      onLeave={leaveGame}
+    />
+  )
 
   const question = questions[currentIndex]
 
@@ -47,6 +56,15 @@ export default function Setup() {
           saving={saving}
           onAnswer={submitAnswer}
         />
+
+        {/* AFK warning shown if the partner hasn't sent any activity in 2 minutes */}
+        {partnerAfk && (
+          <AfkWarning partnerName={partnerStatus.name} onLeave={leaveGame} />
+        )}
+
+        <div className="flex justify-center">
+          <LeaveGameButton partnerName={partnerStatus.name} />
+        </div>
       </div>
     </div>
   )

@@ -4,90 +4,154 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* ── Design tokens ──────────────────────────────────────────────────────────
-   These are our app-level palette values. Shadcn's semantic tokens in :root
-   below reference these so both systems share the same source of truth.
+/* ── Design tokens — Vibrant Discovery ─────────────────────────────────────
+   Single source of truth for all colors, typography, spacing, and radius.
+   Derived directly from the Stitch "Vibrant Discovery" design system spec.
 ─────────────────────────────────────────────────────────────────────────── */
 @theme {
-  /* Heebo is the primary font — full Hebrew + Latin support */
-  --font-sans: 'Heebo', 'Plus Jakarta Sans', sans-serif;
+  /* Fonts
+     Primary body/headline: Plus Jakarta Sans (geometric, friendly)
+     Labels: Spline Sans (energetic contrast, slight letter-spacing)
+     Heebo is kept for Hebrew text fallback (full RTL support) */
+  --font-sans:  'Plus Jakarta Sans', 'Heebo', sans-serif;
+  --font-label: 'Spline Sans', 'Plus Jakarta Sans', sans-serif;
 
-  /* Brand palette */
-  --color-brand-purple:    #630ed4;
-  --color-brand-purple-md: #7c3aed;
-  --color-brand-yellow:    #fed01b;
-  --color-brand-pink:      #ae397b;
-  --color-brand-cyan:      #22d3ee;
+  /* ── Primary — Energetic Purple ──────────────────────────────────────── */
+  --color-primary:              #630ed4;
+  --color-on-primary:           #ffffff;
+  --color-primary-container:    #7c3aed;
+  --color-on-primary-container: #ede0ff;
+  --color-inverse-primary:      #d2bbff;
+  --color-primary-fixed:        #eaddff;
+  --color-primary-fixed-dim:    #d2bbff;
+  --color-on-primary-fixed:     #25005a;
 
-  /* Surface scale */
-  --color-surface:           #f8f9ff;
-  --color-surface-low:       #eff4ff;
-  --color-surface-container: #e6eeff;
+  /* ── Secondary — Sunny Yellow ────────────────────────────────────────── */
+  --color-secondary:              #735c00;
+  --color-on-secondary:           #ffffff;
+  --color-secondary-container:    #fed01b;
+  --color-on-secondary-container: #6f5900;
+  --color-secondary-fixed:        #ffe083;
+  --color-secondary-fixed-dim:    #eec200;
+  --color-on-secondary-fixed:     #231b00;
 
-  /* Text */
+  /* ── Tertiary — Soft Pink ────────────────────────────────────────────── */
+  --color-tertiary:              #8f1e62;
+  --color-on-tertiary:           #ffffff;
+  --color-tertiary-container:    #ae397b;
+  --color-on-tertiary-container: #ffdce9;
+  --color-tertiary-fixed:        #ffd8e7;
+  --color-tertiary-fixed-dim:    #ffafd3;
+  --color-on-tertiary-fixed:     #3d0026;
+
+  /* ── Error ───────────────────────────────────────────────────────────── */
+  --color-error:              #ba1a1a;
+  --color-on-error:           #ffffff;
+  --color-error-container:    #ffdad6;
+  --color-on-error-container: #93000a;
+
+  /* ── Surface scale (7 tiers) ─────────────────────────────────────────── */
+  --color-surface:                    #f8f9ff;
+  --color-surface-dim:                #d0dbed;
+  --color-surface-bright:             #f8f9ff;
+  --color-surface-container-lowest:   #ffffff;
+  --color-surface-container-low:      #eff4ff;
+  --color-surface-container:          #e6eeff;
+  --color-surface-container-high:     #dee9fc;
+  --color-surface-container-highest:  #d9e3f6;
+  --color-surface-tint:               #732ee4;
+  --color-surface-variant:            #d9e3f6;
+
+  /* ── Text ────────────────────────────────────────────────────────────── */
   --color-on-surface:         #121c2a;
   --color-on-surface-variant: #4a4455;
+  --color-inverse-surface:    #27313f;
+  --color-inverse-on-surface: #eaf1ff;
 
-  /* Borders */
-  --color-outline:         #ccc3d8;
-  --color-outline-variant: #7b7487;
+  /* ── Borders — NOTE: outline is DARKER, outline-variant is LIGHTER ───── */
+  --color-outline:         #7b7487;
+  --color-outline-variant: #ccc3d8;
+
+  /* Tailwind utility shorthand for tertiary colors (used in FeatureCard pills) */
+  --color-tertiary:           #8f1e62;
+  --color-tertiary-container: #ae397b;
+
+  /* ── Background ──────────────────────────────────────────────────────── */
+  --color-background:    #f8f9ff;
+  --color-on-background: #121c2a;
+
+  /* ── Spacing rhythm (8px base unit) ──────────────────────────────────── */
+  --spacing-unit:          8px;
+  --spacing-container-max: 600px;
+  --spacing-gutter:        1.5rem;
+  --spacing-stack-sm:      0.5rem;
+  --spacing-stack-md:      1.5rem;
+  --spacing-stack-lg:      3rem;
+
+  /* ── Radius scale ────────────────────────────────────────────────────── */
+  --radius-sm:      0.25rem;   /* 4px  */
+  --radius-default: 0.5rem;    /* 8px  */
+  --radius-md:      0.75rem;   /* 12px */
+  --radius-lg:      1rem;      /* 16px */
+  --radius-xl:      1.5rem;    /* 24px */
+  --radius-full:    9999px;
 }
 
 /* ── Shadcn semantic token overrides ────────────────────────────────────────
-   Map our brand into shadcn's --primary / --secondary / etc. so all shadcn
-   components (Button, Card, Badge, Progress…) automatically use our palette.
+   Map Vibrant Discovery tokens into shadcn's slot names so every shadcn
+   component (Button, Card, Badge, Input…) automatically uses our palette.
+   NOTE: do NOT redeclare tokens already in @theme — that creates circular
+   self-references. Only override shadcn slots that differ from our @theme values.
 ─────────────────────────────────────────────────────────────────────────── */
 @theme inline {
-  /* Font */
   --font-heading: var(--font-sans);
 
-  /* Shadcn colour aliases → our palette */
-  --color-background:         var(--color-surface);
-  --color-foreground:         var(--color-on-surface);
+  /* Shadcn background/foreground — map to our surface scale */
+  --color-background:         #f8f9ff;
+  --color-foreground:         #121c2a;
   --color-card:               #ffffff;
-  --color-card-foreground:    var(--color-on-surface);
+  --color-card-foreground:    #121c2a;
   --color-popover:            #ffffff;
-  --color-popover-foreground: var(--color-on-surface);
+  --color-popover-foreground: #121c2a;
 
-  /* Primary = brand purple */
-  --color-primary:            var(--color-brand-purple);
+  /* Primary purple */
+  --color-primary:            #630ed4;
   --color-primary-foreground: #ffffff;
 
-  /* Secondary = brand yellow */
-  --color-secondary:            var(--color-brand-yellow);
-  --color-secondary-foreground: var(--color-on-surface);
+  /* Secondary — yellow (shadcn "secondary" slot = our secondary-container) */
+  --color-secondary:            #fed01b;
+  --color-secondary-foreground: #6f5900;
 
-  --color-muted:            var(--color-surface-container);
-  --color-muted-foreground: var(--color-on-surface-variant);
+  --color-muted:            #e6eeff;
+  --color-muted-foreground: #4a4455;
 
-  --color-accent:            var(--color-surface-low);
-  --color-accent-foreground: var(--color-on-surface);
+  --color-accent:            #eff4ff;
+  --color-accent-foreground: #121c2a;
 
-  --color-destructive: oklch(0.577 0.245 27.325);
+  --color-destructive: #ba1a1a;
 
-  --color-border: var(--color-outline);
-  --color-input:  var(--color-surface-low);
-  --color-ring:   var(--color-brand-purple);
+  /* Borders use the lighter outline-variant token */
+  --color-border: #ccc3d8;
+  --color-input:  #eff4ff;
+  --color-ring:   #630ed4;
 
-  /* Radius — slightly larger than shadcn default to match our rounded-2xl style */
-  --radius: 0.875rem;
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.4);
+  /* Radius — shadcn uses --radius as its base */
+  --radius:     1rem;
+  --radius-sm:  0.25rem;
+  --radius-md:  0.75rem;
+  --radius-lg:  1rem;
+  --radius-xl:  1.5rem;
+  --radius-2xl: 1.875rem;
+  --radius-3xl: 2.25rem;
 }
 
 /* ── Base ───────────────────────────────────────────────────────────────── */
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
 html, body, #root {
   height: 100%;
   background-color: var(--color-surface);
-  font-family: 'Heebo', 'Plus Jakarta Sans', sans-serif;
+  font-family: var(--font-sans);
 }
 
 @layer base {
@@ -97,6 +161,47 @@ html, body, #root {
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* ── Typography scale ───────────────────────────────────────────────────── */
+/* Named type roles from the Vibrant Discovery spec */
+.type-display-lg {
+  font-family: var(--font-sans);
+  font-size: 48px;
+  font-weight: 800;
+  line-height: 1.1;
+}
+.type-headline-lg {
+  font-family: var(--font-sans);
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+.type-headline-md {
+  font-family: var(--font-sans);
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+.type-body-lg {
+  font-family: var(--font-sans);
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 1.6;
+}
+.type-body-md {
+  font-family: var(--font-sans);
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.5;
+}
+/* Label uses Spline Sans with letter-spacing for clarity on vibrant backgrounds */
+.type-label-bold {
+  font-family: var(--font-label);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.05em;
 }
 
 /* ── App-level utilities ────────────────────────────────────────────────── */
@@ -109,46 +214,63 @@ html, body, #root {
 /* Logo gradient pill */
 .logo-gradient {
   background: linear-gradient(135deg, #630ed4, #ae397b);
+  /* Primary-tinted ambient shadow — Level 2 elevation */
   box-shadow: 0 8px 24px rgba(99, 14, 212, 0.35);
 }
 
-/* ── Button variants (extend shadcn Button via CSS layer) ───────────────── */
+/* ── Elevation / ambient shadow system ──────────────────────────────────────
+   Shadows are tinted with primary purple — never plain grey.
+   Level 1: cards, Level 2: buttons/active, Level 3: modals.
+─────────────────────────────────────────────────────────────────────────── */
+.shadow-lvl1 { box-shadow: 0 4px 20px rgba(99, 14, 212, 0.10); }
+.shadow-lvl2 { box-shadow: 0 6px 20px rgba(99, 14, 212, 0.25); }
+.shadow-lvl3 { box-shadow: 0 12px 40px rgba(99, 14, 212, 0.20); }
 
-/* Primary — purple gradient with lift on hover */
+/* ── Button variants ────────────────────────────────────────────────────── */
+
+/* Primary — purple gradient, floats +4px on hover, squishes on tap */
 .btn-primary {
   background: linear-gradient(135deg, #630ed4, #7c3aed);
-  box-shadow: 0 6px 20px rgba(99, 14, 212, 0.4);
+  box-shadow: 0 6px 20px rgba(99, 14, 212, 0.40);
   color: #ffffff;
   transition: transform 0.15s, box-shadow 0.15s;
 }
-.btn-primary:not(:disabled):hover  { transform: translateY(-2px); }
-.btn-primary:not(:disabled):active { transform: scale(0.95); }
+.btn-primary:not(:disabled):hover  { transform: translateY(-4px); box-shadow: 0 10px 28px rgba(99, 14, 212, 0.45); }
+.btn-primary:not(:disabled):active { transform: scale(0.95); box-shadow: 0 2px 8px rgba(99, 14, 212, 0.30); }
 
-/* Secondary — yellow with lift on hover */
+/* Secondary — sunny yellow */
 .btn-secondary-custom {
-  background: #fed01b;
+  background: var(--color-secondary-container);
   box-shadow: 0 4px 16px rgba(254, 208, 27, 0.45);
-  color: #121c2a;
+  color: var(--color-on-secondary-container);
   transition: transform 0.15s, box-shadow 0.15s;
 }
-.btn-secondary-custom:not(:disabled):hover  { transform: translateY(-2px); }
+.btn-secondary-custom:not(:disabled):hover  { transform: translateY(-4px); }
 .btn-secondary-custom:not(:disabled):active { transform: scale(0.95); }
 
 /* ── Card variants ──────────────────────────────────────────────────────── */
 
-/* Purple-accented card — used in CreateCard and player "me" badge */
 .card-purple {
-  background: #ffffff;
-  border: 2px solid #630ed4;
+  background: var(--color-surface-container-lowest);
+  border: 2px solid var(--color-primary);
   box-shadow: 0 4px 24px rgba(99, 14, 212, 0.10);
 }
 
-/* Yellow-accented card — used in JoinCard and partner badge */
 .card-yellow {
-  background: #ffffff;
-  border: 2px solid #fed01b;
+  background: var(--color-surface-container-lowest);
+  border: 2px solid var(--color-secondary-container);
   box-shadow: 0 4px 24px rgba(254, 208, 27, 0.15);
 }
+
+/* ── Game input ─────────────────────────────────────────────────────────── */
+.game-input {
+  background: var(--color-surface-container-low);
+  border: 2px solid var(--color-outline-variant);
+  color: var(--color-on-surface);
+  outline: none;
+  transition: border-color 0.15s;
+}
+.game-input:focus { border-color: var(--color-primary); }
 
 /* ── Rainbow animated border (QuestionCard) ─────────────────────────────── */
 
@@ -163,10 +285,9 @@ html, body, #root {
   100% { --border-angle: 360deg; }
 }
 
-/* Outer container — the gradient spins behind it */
 .question-card-animated {
   position: relative;
-  background: #ffffff;
+  background: var(--color-surface-container-lowest);
   box-shadow: 0 8px 32px rgba(99, 14, 212, 0.15);
   isolation: isolate;
 }
@@ -179,11 +300,7 @@ html, body, #root {
   border-radius: inherit;
   background: conic-gradient(
     from var(--border-angle, 0deg),
-    #630ed4,
-    #ae397b,
-    #fed01b,
-    #22d3ee,
-    #630ed4
+    #630ed4, #ae397b, #fed01b, #22d3ee, #630ed4
   );
   animation: rainbow-spin 3s linear infinite;
   z-index: -1;
@@ -195,17 +312,17 @@ html, body, #root {
   position: absolute;
   inset: 2px;
   border-radius: inherit;
-  background: #ffffff;
+  background: var(--color-surface-container-lowest);
   z-index: -1;
 }
 
 /* ── Progress bar ───────────────────────────────────────────────────────── */
 
-/* Width driven by --progress CSS variable; transition lives here, not inline */
+/* Width driven by --progress CSS variable */
 .progress-bar {
   height: 100%;
-  border-radius: 9999px;
-  background-color: var(--color-brand-purple);
+  border-radius: var(--radius-full);
+  background-color: var(--color-primary);
   width: var(--progress, 0%);
   transition: width 0.3s ease;
 }
@@ -215,10 +332,10 @@ html, body, #root {
 .timer-display {
   width: 56px;
   height: 56px;
-  border-radius: 9999px;
-  border: 3px solid var(--color-brand-purple);
-  background: var(--color-surface-low);
-  color: var(--color-brand-purple);
+  border-radius: var(--radius-full);
+  border: 3px solid var(--color-primary);
+  background: var(--color-surface-container-low);
+  color: var(--color-primary);
   font-size: 1.25rem;
   font-weight: 800;
   display: flex;
@@ -228,27 +345,29 @@ html, body, #root {
 }
 
 .timer-urgent {
-  border-color: #ef4444;
-  color: #ef4444;
+  border-color: var(--color-error);
+  color: var(--color-error);
   animation: pulse-urgent 0.6s ease-in-out infinite;
 }
 
 /* ── Answer option buttons ──────────────────────────────────────────────── */
 
 .answer-option {
-  background: #ffffff;
-  border: 2px solid var(--color-outline);
+  background: var(--color-surface-container-lowest);
+  border: 2px solid var(--color-outline-variant);
   color: var(--color-on-surface);
-  transition: border-color 0.15s, background 0.15s;
+  transition: border-color 0.15s, background 0.15s, transform 0.1s;
 }
 .answer-option:not(:disabled):hover {
-  border-color: var(--color-brand-purple);
-  background: #f3e8ff;
+  border-color: var(--color-primary);
+  background: var(--color-primary-fixed);
+  transform: translateY(-2px);
 }
+.answer-option:not(:disabled):active { transform: scale(0.95); }
 
 .answer-option-selected {
-  border-color: var(--color-brand-purple);
-  background: #ede9fe;
+  border-color: var(--color-primary);
+  background: var(--color-primary-fixed);
 }
 
 .answer-option-correct {
@@ -258,14 +377,13 @@ html, body, #root {
 }
 
 .answer-option-wrong {
-  border-color: #ef4444;
-  background: #fef2f2;
-  color: #dc2626;
+  border-color: var(--color-error);
+  background: var(--color-error-container);
+  color: var(--color-on-error-container);
 }
 
 /* ── Misc ───────────────────────────────────────────────────────────────── */
 
-/* Waving hand animation */
 @keyframes wave {
   0%, 100% { transform: rotate(0deg); }
   20%       { transform: rotate(20deg); }

@@ -6,12 +6,12 @@ import WaitingView from './lobby/WaitingView'
 import JoinCard from './lobby/JoinCard'
 import CreateCard from './lobby/CreateCard'
 import FeatureCard from './lobby/FeatureCard'
-import { TrophyIcon, PinIcon, HeartIcon } from './ui/Icons'
+import { TrophyIcon, PinIcon, HeartIcon, UserIcon, CheckIcon } from './ui/Icons'
 
 const FEATURE_CARDS = [
-  { icon: <TrophyIcon className="w-7 h-7" />, title: 'תחרות חברים', desc: 'גלו מי מכיר את מי טוב יותר בסיבוב מהנה' },
-  { icon: <PinIcon    className="w-7 h-7" />, title: 'שאלות מגוונות', desc: 'שאלות על העדפות, חלומות ואישיות' },
-  { icon: <HeartIcon  className="w-7 h-7" />, title: 'זמן איכות', desc: 'חזקו את הקשר עם חברים ומשפחה' },
+  { icon: <TrophyIcon className="w-7 h-7" />, title: 'תחרות חברים',  desc: 'גלו מי מכיר את מי טוב יותר בסיבוב מהנה',  color: 'tertiary'  as const },
+  { icon: <PinIcon    className="w-7 h-7" />, title: 'שאלות מגוונות', desc: 'שאלות על העדפות, חלומות ואישיות',         color: 'secondary' as const },
+  { icon: <HeartIcon  className="w-7 h-7" />, title: 'זמן איכות',    desc: 'חזקו את הקשר עם חברים ומשפחה',           color: 'primary'   as const },
 ]
 
 /**
@@ -46,19 +46,35 @@ export default function Lobby() {
         </div>
       )}
 
-      <div className="w-full max-w-2xl flex flex-col gap-1">
-        <label className="text-xs font-bold text-on-surface-variant">מה שמך?</label>
-        <input
-          type="text"
-          value={name}
-          onChange={e => setName(e.target.value)}
-          placeholder="הכנס את שמך..."
-          dir="rtl"
-          className="game-input w-full rounded-xl py-3 px-4 text-sm font-medium"
-        />
+      {/* Step 1 — name entry, visually prominent so players know where to start */}
+      <div className="w-full max-w-2xl flex flex-col gap-3">
+        <div className="flex items-center gap-2">
+          <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary text-white text-xs font-extrabold shrink-0">1</span>
+          <span className="text-sm font-extrabold text-on-surface">מה שמך?</span>
+        </div>
+        <div className={`flex items-center gap-3 rounded-2xl border-2 px-4 py-3 bg-surface-low transition-colors ${name.trim() ? 'border-primary' : 'border-outline'}`}>
+          {/* User avatar icon */}
+          <UserIcon className="w-6 h-6 text-on-surface-variant shrink-0" />
+          <input
+            type="text"
+            value={name}
+            onChange={e => setName(e.target.value)}
+            placeholder="הכנס את שמך..."
+            dir="rtl"
+            className="flex-1 bg-transparent outline-none text-base font-semibold text-on-surface placeholder:text-on-surface-variant/50"
+          />
+          {/* Checkmark appears once a name is entered */}
+          {name.trim() && <CheckIcon className="w-5 h-5 text-primary shrink-0" />}
+        </div>
       </div>
 
-      <div className="w-full max-w-2xl flex flex-col md:flex-row gap-4">
+      {/* Step 2 — choose to create or join, dimmed until a name is entered */}
+      <div className={`w-full max-w-2xl flex flex-col gap-3 transition-opacity ${name.trim() ? 'opacity-100' : 'opacity-40 pointer-events-none'}`}>
+        <div className="flex items-center gap-2">
+          <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary text-white text-xs font-extrabold shrink-0">2</span>
+          <span className="text-sm font-extrabold text-on-surface">בחר פעולה</span>
+        </div>
+        <div className="flex flex-col md:flex-row gap-4">
         <JoinCard
           name={name}
           roomCode={roomCode}
@@ -72,11 +88,12 @@ export default function Lobby() {
           loading={loading}
           onCreate={() => createRoom(name)}
         />
+        </div>
       </div>
 
       <div className="w-full max-w-2xl hidden md:grid grid-cols-3 gap-4 mt-2">
-        {FEATURE_CARDS.map(({ icon, title, desc }) => (
-          <FeatureCard key={title} icon={icon} title={title} desc={desc} />
+        {FEATURE_CARDS.map(({ icon, title, desc, color }) => (
+          <FeatureCard key={title} icon={icon} title={title} desc={desc} color={color} />
         ))}
       </div>
     </div>

@@ -6,6 +6,7 @@ import Lobby from './components/Lobby'
 import Setup from './components/Setup'
 import GameRound from './components/GameRound'
 import Results from './components/Results'
+import HowToPlay from './components/HowToPlay'
 import { supabase } from './lib/supabase'
 
 /**
@@ -70,6 +71,7 @@ export default function App() {
             <Route path="/setup" element={<Setup />} />
             <Route path="/game" element={<GameRound />} />
             <Route path="/results" element={<Results />} />
+            <Route path="/how-to-play" element={<HowToPlay />} />
           </Routes>
         </main>
         <AppFooter />

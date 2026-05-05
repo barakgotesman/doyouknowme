@@ -5,6 +5,9 @@ type Track = 'lobby' | 'setup' | 'gameplay' | 'results'
 // Single shared Audio instance per track — prevents duplicate elements on re-renders
 const audioInstances: Partial<Record<Track, HTMLAudioElement>> = {}
 
+// Tracks any in-progress fade-out interval per track so a re-mount can cancel it
+const fadeOutTimers: Partial<Record<Track, ReturnType<typeof setInterval>>> = {}
+
 function getInstance(track: Track): HTMLAudioElement {
   if (!audioInstances[track]) {
     const el = new Audio(`/sounds/${track}.mp3`)
@@ -29,6 +32,13 @@ export function useAudio(track: Track) {
     const audio = getInstance(track)
     audioRef.current = audio
 
+    // Cancel any in-progress fade-out for this track so a same-track re-mount doesn't cut the music
+    if (fadeOutTimers[track]) {
+      clearInterval(fadeOutTimers[track])
+      delete fadeOutTimers[track]
+      audio.volume = getSavedVolume() || 0.35
+    }
+
     const muted = localStorage.getItem('audio_muted') === 'true'
     if (muted) return
 
@@ -47,16 +57,18 @@ export function useAudio(track: Track) {
     })
 
     return () => {
-      // Fade out on unmount instead of hard-stopping
+      // Fade out on unmount — store the timer so a re-mount on the same track can cancel it
       const fadeOut = setInterval(() => {
         if (audio.volume > 0.05) {
           audio.volume = Math.max(0, audio.volume - 0.05)
         } else {
           audio.pause()
-          audio.volume = 0.35
+          audio.volume = getSavedVolume() || 0.35
           clearInterval(fadeOut)
+          delete fadeOutTimers[track]
         }
       }, 50)
+      fadeOutTimers[track] = fadeOut
     }
   }, [track])
 }

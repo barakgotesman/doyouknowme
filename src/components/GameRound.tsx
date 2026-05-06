@@ -4,6 +4,7 @@ import LoadingScreen from './ui/LoadingScreen'
 import ErrorScreen from './ui/ErrorScreen'
 import LeaveGameButton from './ui/LeaveGameButton'
 import ScoreHeader from './game/ScoreHeader'
+import ReactionBar from './game/ReactionBar'
 import AnsweringView from './game/AnsweringView'
 import SubjectView from './game/SubjectView'
 import RevealedView from './game/RevealedView'
@@ -26,6 +27,7 @@ export default function GameRound() {
     myName, partnerName, myRole,
     myScore, partnerScore,
     submitAnswer, handleTimeout, leaveGame,
+    sendReaction, myReaction, partnerReaction, onCooldown,
   } = useGame()
 
   if (loading) return <LoadingScreen message="טוען משחק..." />
@@ -41,6 +43,8 @@ export default function GameRound() {
         myScore={myScore}
         partnerScore={partnerScore}
         roundNumber={roundNumber}
+        myReaction={myReaction}
+        partnerReaction={partnerReaction}
       />
 
       <div className="flex-1 flex flex-col items-center justify-center px-5 py-6 gap-5 pb-2">
@@ -71,6 +75,9 @@ export default function GameRound() {
             startedAt={startedAt!}
           />
         )}
+
+        {/* Emoji reaction bar — always visible so players can react at any moment */}
+        <ReactionBar onReact={sendReaction} onCooldown={onCooldown} />
 
         <LeaveGameButton partnerName={partnerName} />
       </div>

@@ -34,6 +34,12 @@ export interface SetupAnswer {
   answer: string
 }
 
+/** Payload for the player_react broadcast event */
+export interface PlayerReactPayload {
+  emoji: string
+  player_role: PlayerRole
+}
+
 export interface GameRound {
   id: string
   room_id: string

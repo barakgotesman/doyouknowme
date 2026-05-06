@@ -406,3 +406,46 @@ html, body, #root {
   0%, 100% { transform: scale(1); }
   50%       { transform: scale(1.1); }
 }
+
+/* Cycles the background-position of a rainbow gradient to animate text color */
+@keyframes rainbow-shift {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Gentle float for the whole hero title */
+@keyframes hero-float {
+  0%, 100% { transform: translateY(0px) scale(1); }
+  50%       { transform: translateY(-5px) scale(1.02); }
+}
+
+/* Logo glow pulses between a soft purple and a richer purple as it floats */
+@keyframes logo-glow {
+  0%, 100% { box-shadow: 0 8px 30px 4px rgba(139, 92, 246, 0.35), 0 4px 12px rgba(0,0,0,0.12); }
+  50%       { box-shadow: 0 16px 48px 8px rgba(139, 92, 246, 0.55), 0 6px 18px rgba(0,0,0,0.15); }
+}
+
+.hero-logo {
+  animation: logo-glow 3s ease-in-out infinite;
+}
+
+.hero-title {
+  background: linear-gradient(
+    90deg,
+    #ff6b6b, #ffa500, #ffd700, #4cde80,
+    #00cfff, #a855f7, #ff6b6b
+  );
+  background-size: 300% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  filter:
+    drop-shadow(0 2px 0px rgba(255,255,255,0.9))
+    drop-shadow(0 6px 18px rgba(80, 20, 160, 0.55));
+  animation:
+    rainbow-shift 4s linear infinite,
+    hero-float 3s ease-in-out infinite;
+  display: inline-block;
+}

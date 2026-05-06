@@ -146,13 +146,40 @@ export function useRoom() {
 
   /**
    * Cancels the waiting state for Player A.
-   * Unsubscribes from Realtime and returns to the main lobby form.
+   * Sets rooms.status = 'abandoned' in DB, clears sessionStorage, unsubscribes from Realtime,
+   * and returns to the main lobby form so the user starts fresh.
    */
-  function cancelWaiting() {
+  async function cancelWaiting() {
+    const roomCode = sessionStorage.getItem('room_code')
+    if (roomCode) {
+      // Mark room as abandoned so ReturnToGameFab and SessionRestorer won't try to restore it
+      await supabase.from('rooms').update({ status: 'abandoned' }).eq('code', roomCode)
+    }
     channelRef.current?.unsubscribe()
     channelRef.current = null
+    sessionStorage.removeItem('player_id')
+    sessionStorage.removeItem('room_code')
+    sessionStorage.removeItem('player_role')
     setWaitingCode(null)
   }
 
-  return { loading, error, waitingCode, createRoom, joinRoom, cancelWaiting }
+  /**
+   * Directly restores the waiting UI for an existing room code.
+   * Used when the player returns to the home screen while still in 'waiting' phase
+   * (e.g. via the "back to game" card) — avoids re-navigating to "/" which wouldn't
+   * re-trigger the mount effect since Lobby is already mounted.
+   */
+  function restoreWaiting(code: string) {
+    channelRef.current?.unsubscribe()
+    setWaitingCode(code)
+    channelRef.current = supabase
+      .channel(`game:${code}`)
+      .on('broadcast', { event: 'player_joined' }, () => {
+        channelRef.current?.unsubscribe()
+        navigate('/setup', { replace: true })
+      })
+      .subscribe()
+  }
+
+  return { loading, error, waitingCode, createRoom, joinRoom, cancelWaiting, restoreWaiting }
 }

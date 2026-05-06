@@ -1,11 +1,9 @@
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { supabase } from '../../lib/supabase'
+import { resolvePhase, type GamePhase } from '../../lib/gameUtils'
 
-/** Routes that are part of the active game flow — FAB is hidden on these */
-const GAME_ROUTES = ['/', '/setup', '/game', '/results']
-
-type GamePhase = 'waiting' | 'setup' | 'playing' | 'finished'
+/** Routes where the FAB pill is hidden (it's part of the active game flow) */
+const HIDE_FAB_ROUTES = ['/setup', '/game', '/results']
 
 /** Human-readable label for each game phase shown on the FAB */
 const PHASE_LABELS: Record<GamePhase, string> = {
@@ -15,66 +13,44 @@ const PHASE_LABELS: Record<GamePhase, string> = {
   finished: 'תוצאות',
 }
 
-/**
- * Resolves the true game phase from the DB.
- *
- * Room status 'waiting' is ambiguous: it means "waiting for Player B to join" but
- * historically stayed 'waiting' even after both players moved to setup (if the
- * joinRoom update didn't fire). We disambiguate by checking the player count:
- * if 2 players are already in the room, setup has started.
- */
-async function resolvePhase(roomCode: string): Promise<{ phase: GamePhase; roomId: string } | null> {
-  const { data: room } = await supabase
-    .from('rooms')
-    .select('id, status')
-    .eq('code', roomCode)
-    .maybeSingle()
-
-  if (!room || room.status === 'abandoned') {
-    // Partner abandoned — clear stale session so home screen shows clean
-    sessionStorage.removeItem('player_id')
-    sessionStorage.removeItem('room_code')
-    sessionStorage.removeItem('player_role')
-    return null
-  }
-
-  if (room.status !== 'waiting') {
-    return { phase: room.status as GamePhase, roomId: room.id }
-  }
-
-  // status = 'waiting' — check if both players have joined already
-  const { count } = await supabase
-    .from('players')
-    .select('id', { count: 'exact', head: true })
-    .eq('room_id', room.id)
-
-  // 2 players present means setup has started even if DB status wasn't updated
-  return { phase: (count ?? 0) >= 2 ? 'setup' : 'waiting', roomId: room.id }
+interface Props {
+  /** Called whenever session detection resolves — true if an active session exists. */
+  onSessionDetected?: (hasSession: boolean) => void
 }
 
 /**
  * Floating action button shown on non-game pages (e.g. how-to-play) when the
  * player has an active session. Displays the live game phase and navigates the
  * player back to the correct screen on tap.
+ *
+ * On the home screen ('/') the pill is hidden but detection still runs,
+ * allowing the Lobby to collapse its Create/Join UI via onSessionDetected.
  */
-export default function ReturnToGameFab() {
+export default function ReturnToGameFab({ onSessionDetected }: Props) {
   const location = useLocation()
   const navigate  = useNavigate()
   const [phase, setPhase] = useState<GamePhase | null>(null)
 
   useEffect(() => {
-    if (GAME_ROUTES.includes(location.pathname)) { setPhase(null); return }
-
     const roomCode = sessionStorage.getItem('room_code')
     const playerId = sessionStorage.getItem('player_id')
-    if (!roomCode || !playerId) { setPhase(null); return }
+
+    if (!roomCode || !playerId) {
+      setPhase(null)
+      onSessionDetected?.(false)
+      return
+    }
 
     resolvePhase(roomCode).then(result => {
-      setPhase(result?.phase ?? null)
+      const resolved = result?.phase ?? null
+      setPhase(resolved)
+      onSessionDetected?.(resolved !== null)
     })
   }, [location.pathname])
 
-  if (!phase) return null
+  // On game-flow pages hide the pill entirely (detection still ran above)
+  const showPill = phase !== null && !HIDE_FAB_ROUTES.includes(location.pathname) && location.pathname !== '/'
+  if (!showPill) return null
 
   /** Navigates to the screen matching the current game phase. */
   function navigateToPhase(p: GamePhase, roomCode: string) {
@@ -89,7 +65,7 @@ export default function ReturnToGameFab() {
     const roomCode = sessionStorage.getItem('room_code')
     if (!roomCode) return
     resolvePhase(roomCode).then(result => {
-      if (!result) { setPhase(null); return }
+      if (!result) { setPhase(null); onSessionDetected?.(false); return }
       setPhase(result.phase)
       navigateToPhase(result.phase, roomCode)
     })

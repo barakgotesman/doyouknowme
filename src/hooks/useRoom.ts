@@ -71,9 +71,11 @@ export function useRoom() {
         .from('rooms').insert({ code, status: 'waiting' }).select().single()
       if (roomErr || !room) throw roomErr ?? new Error('Failed to create room')
 
+      // Read the current auth session so we can persist auth_id on the player row
+      const { data: { session } } = await supabase.auth.getSession()
       const { data: player, error: playerErr } = await supabase
         .from('players')
-        .insert({ room_id: room.id, display_name: name.trim(), role: 'A', setup_done: false })
+        .insert({ room_id: room.id, display_name: name.trim(), role: 'A', setup_done: false, auth_id: session?.user?.id ?? null })
         .select().single()
       if (playerErr || !player) throw playerErr ?? new Error('Failed to create player')
 
@@ -116,9 +118,24 @@ export function useRoom() {
       if (roomErr) throw roomErr
       if (!room) throw new Error('קוד חדר לא נמצא או שהמשחק כבר התחיל')
 
+      // Read the current auth session so we can persist auth_id on the player row
+      const { data: { session } } = await supabase.auth.getSession()
+      const authId = session?.user?.id ?? null
+
+      // Block joining your own room — same Google account can't play both sides
+      if (authId && !session?.user?.is_anonymous) {
+        const { data: existing } = await supabase
+          .from('players')
+          .select('id')
+          .eq('room_id', room.id)
+          .eq('auth_id', authId)
+          .maybeSingle()
+        if (existing) throw new Error('אי אפשר להצטרף לחדר שלך — אתה כבר שחקן A בחדר זה')
+      }
+
       const { data: player, error: playerErr } = await supabase
         .from('players')
-        .insert({ room_id: room.id, display_name: name.trim() || 'אורח', role: 'B', setup_done: false })
+        .insert({ room_id: room.id, display_name: name.trim() || 'אורח', role: 'B', setup_done: false, auth_id: authId })
         .select().single()
       if (playerErr || !player) throw playerErr ?? new Error('Failed to join room')
 

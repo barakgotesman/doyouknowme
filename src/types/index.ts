@@ -17,6 +17,14 @@ export interface Player {
   role: PlayerRole
   setup_done: boolean
   created_at: string
+  /** auth.users id — set when the player has a Supabase auth session (anonymous or Google) */
+  auth_id: string | null
+}
+
+/** One row per auth.users entry — tracks admin status. Created automatically via DB trigger. */
+export interface Profile {
+  id: string
+  is_admin: boolean
 }
 
 export interface Question {

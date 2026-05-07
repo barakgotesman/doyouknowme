@@ -8,6 +8,8 @@ import Setup from './components/Setup'
 import GameRound from './components/GameRound'
 import Results from './components/Results'
 import HowToPlay from './components/HowToPlay'
+import AuthCallback from './pages/AuthCallback'
+import { useAuth } from './hooks/useAuth'
 import { supabase } from './lib/supabase'
 
 interface SessionRestorerProps {
@@ -65,6 +67,25 @@ function SessionRestorer({ onSessionDetected }: SessionRestorerProps) {
   return null
 }
 
+/**
+ * Wraps a route that requires the admin Google session.
+ * Renders null while auth is loading (prevents flash-redirect).
+ * Redirects to "/" if the user is not the admin.
+ */
+function ProtectedAdminRoute({ children }: { children: React.ReactNode }) {
+  const { isAdmin, loading } = useAuth()
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    if (!loading && !isAdmin) {
+      navigate('/', { replace: true })
+    }
+  }, [isAdmin, loading])
+
+  if (loading || !isAdmin) return null
+  return <>{children}</>
+}
+
 /** Root component — wires session detection state between SessionRestorer, ReturnToGameFab, and Lobby. */
 function AppInner() {
   // True when the player has an ongoing game — causes Lobby to hide create/join cards
@@ -82,6 +103,17 @@ function AppInner() {
           <Route path="/game" element={<GameRound />} />
           <Route path="/results" element={<Results />} />
           <Route path="/how-to-play" element={<HowToPlay />} />
+          <Route path="/auth/callback" element={<AuthCallback />} />
+          <Route
+            path="/admin"
+            element={
+              <ProtectedAdminRoute>
+                <div className="flex-1 flex items-center justify-center text-on-surface-variant text-sm">
+                  Admin panel — coming soon
+                </div>
+              </ProtectedAdminRoute>
+            }
+          />
         </Routes>
       </main>
       <AppFooter />

@@ -9,7 +9,8 @@ import WaitingView from './lobby/WaitingView'
 import JoinCard from './lobby/JoinCard'
 import CreateCard from './lobby/CreateCard'
 import FeatureCard from './lobby/FeatureCard'
-import { TrophyIcon, PinIcon, HeartIcon, UserIcon, CheckIcon, KeyIcon } from './ui/Icons'
+import AuthEntry from './lobby/AuthEntry'
+import { TrophyIcon, PinIcon, HeartIcon, KeyIcon } from './ui/Icons'
 
 const FEATURE_CARDS = [
   { icon: <TrophyIcon className="w-7 h-7" />, title: 'תחרות חברים',  desc: 'גלו מי מכיר את מי טוב יותר בסיבוב מהנה',  color: 'tertiary'  as const },
@@ -31,11 +32,14 @@ interface Props {
  * create/join section is replaced with a "back to game" card so the player can
  * return to the correct phase without accidentally starting a new game.
  *
- * Name state is lifted here so both JoinCard and CreateCard share the same input field.
+ * Name state is lifted here so AuthEntry, JoinCard and CreateCard share it.
  */
 export default function Lobby({ hasActiveSession }: Props) {
   const [name, setName]         = useState('')
   const [roomCode, setRoomCode] = useState('')
+  // tracks whether AuthEntry is still in the 'choosing' or 'loading' state
+  // so we can hide Step 2 until the player has committed to an auth path
+  const [authReady, setAuthReady] = useState(false)
   // Error message shown when a ?join= link points to an invalid or unavailable room
   const [joinLinkError, setJoinLinkError] = useState<string | null>(null)
   // When set, the player arrived via a share link — show simplified join-only UI
@@ -148,6 +152,7 @@ export default function Lobby({ hasActiveSession }: Props) {
             חזרה למשחק
           </button>
         </div>
+
       ) : joinLinkCode ? (
         /* Simplified join-only view — shown when arriving via a valid ?join= share link */
         <form
@@ -163,22 +168,14 @@ export default function Lobby({ hasActiveSession }: Props) {
             <p className="text-3xl font-extrabold tracking-[0.2em] text-primary">{joinLinkCode}</p>
           </div>
 
-          {/* Name input */}
+          {/* Auth + name — same component as main lobby, includes guest/Google choice */}
           <div className="w-full flex flex-col gap-2">
             <label className="text-sm font-extrabold text-on-surface">מה שמך?</label>
-            <div className={`flex items-center gap-3 rounded-2xl border-2 px-4 py-3 bg-surface-low transition-colors ${name.trim() ? 'border-primary' : 'border-outline'}`}>
-              <UserIcon className="w-5 h-5 text-on-surface-variant shrink-0" />
-              <input
-                type="text"
-                value={name}
-                onChange={e => setName(e.target.value)}
-                placeholder="הכנס את שמך..."
-                dir="rtl"
-                autoFocus
-                className="flex-1 bg-transparent outline-none text-base font-semibold text-on-surface placeholder:text-on-surface-variant/50"
-              />
-              {name.trim() && <CheckIcon className="w-5 h-5 text-primary shrink-0" />}
-            </div>
+            <AuthEntry
+              name={name}
+              onNameChange={setName}
+              onReady={() => setAuthReady(true)}
+            />
           </div>
 
           <button
@@ -189,32 +186,24 @@ export default function Lobby({ hasActiveSession }: Props) {
             {loading ? '...' : 'הצטרף למשחק'}
           </button>
         </form>
+
       ) : (
         <>
-          {/* Step 1 — name entry, visually prominent so players know where to start */}
+          {/* Step 1 — auth choice / name entry */}
           <div className="w-full max-w-2xl flex flex-col gap-3">
             <div className="flex items-center gap-2">
               <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary text-white text-xs font-extrabold shrink-0">1</span>
-              <span className="text-sm font-extrabold text-on-surface">מה שמך?</span>
+              <span className="text-sm font-extrabold text-on-surface">כיצד תרצה להמשיך?</span>
             </div>
-            <div className={`flex items-center gap-3 rounded-2xl border-2 px-4 py-3 bg-surface-low transition-colors ${name.trim() ? 'border-primary' : 'border-outline'}`}>
-              {/* User avatar icon */}
-              <UserIcon className="w-6 h-6 text-on-surface-variant shrink-0" />
-              <input
-                type="text"
-                value={name}
-                onChange={e => setName(e.target.value)}
-                placeholder="הכנס את שמך..."
-                dir="rtl"
-                className="flex-1 bg-transparent outline-none text-base font-semibold text-on-surface placeholder:text-on-surface-variant/50"
-              />
-              {/* Checkmark appears once a name is entered */}
-              {name.trim() && <CheckIcon className="w-5 h-5 text-primary shrink-0" />}
-            </div>
+            <AuthEntry
+              name={name}
+              onNameChange={setName}
+              onReady={() => setAuthReady(true)}
+            />
           </div>
 
-          {/* Step 2 — choose to create or join, dimmed until a name is entered */}
-          <div className={`w-full max-w-2xl flex flex-col gap-3 transition-opacity ${name.trim() ? 'opacity-100' : 'opacity-40 pointer-events-none'}`}>
+          {/* Step 2 — create or join, hidden until auth path is chosen, dimmed until name filled */}
+          <div className={`w-full max-w-2xl flex flex-col gap-3 transition-opacity ${!authReady ? 'opacity-40 pointer-events-none' : name.trim() ? 'opacity-100' : 'opacity-40 pointer-events-none'}`}>
             <div className="flex items-center gap-2">
               <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary text-white text-xs font-extrabold shrink-0">2</span>
               <span className="text-sm font-extrabold text-on-surface">בחר פעולה</span>

@@ -1,12 +1,22 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { setGlobalVolume, getSavedVolume, isMuted, toggleMute } from '../hooks/useAudio'
-import { SettingsIcon, VolumeOffIcon, VolumeLowIcon, VolumeMedIcon, VolumeHighIcon } from '../components/ui/Icons'
+import { useAuth } from '../hooks/useAuth'
+import { useLeaveGame } from '../hooks/useLeaveGame'
+import { SettingsIcon, VolumeOffIcon, VolumeLowIcon, VolumeMedIcon, VolumeHighIcon, LogoutIcon } from '../components/ui/Icons'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '../components/ui/dialog'
 
 /**
  * Global site header — rendered on every screen via App.tsx.
@@ -14,7 +24,12 @@ import {
  */
 
 export default function AppHeader() {
+  const { isAdmin, isGoogleUser, signOut } = useAuth()
+  const { leaveGame } = useLeaveGame()
   const [volume, setVolume] = useState(() => isMuted() ? 0 : getSavedVolume())
+  // controls the "logout while in game" warning dialog
+  const [logoutDialogOpen, setLogoutDialogOpen] = useState(false)
+  const [loggingOut, setLoggingOut] = useState(false)
   // tracks the last non-zero volume so mute/unmute can restore it
   const [lastVolume, setLastVolume] = useState(() => getSavedVolume() || 0.35)
 
@@ -23,6 +38,28 @@ export default function AppHeader() {
     if (val > 0) setLastVolume(val)
     setVolume(val)
     setGlobalVolume(val)
+  }
+
+  /**
+   * Logout flow: if the user has an active game session, show a warning dialog
+   * so they can leave the game cleanly before signing out. Otherwise sign out immediately.
+   */
+  function handleLogoutClick() {
+    const hasActiveGame = !!sessionStorage.getItem('room_code')
+    if (hasActiveGame) {
+      setLogoutDialogOpen(true)
+    } else {
+      signOut()
+    }
+  }
+
+  /** Leaves the active game then signs out. */
+  async function handleLogoutConfirm() {
+    setLoggingOut(true)
+    await leaveGame()
+    await signOut()
+    setLoggingOut(false)
+    setLogoutDialogOpen(false)
   }
 
   /** Toggles mute: if muted restores lastVolume, if unmuted sets volume to 0. */
@@ -43,6 +80,7 @@ export default function AppHeader() {
   }
 
   return (
+    <>
     <header className="flex items-center justify-between px-5 md:px-10 py-3 bg-white/80 backdrop-blur-sm border-b border-outline/20" dir="ltr">
 
       {/* Logo */}
@@ -53,6 +91,21 @@ export default function AppHeader() {
       {/* Nav links — desktop only */}
       <nav className="hidden md:flex items-center gap-6 text-sm font-semibold text-on-surface-variant">
         <Link to="/how-to-play" className="hover:text-primary transition-colors">איך משחקים</Link>
+        {/* Admin panel link — only shown to admin users */}
+        {isAdmin && (
+          <Link to="/admin" className="hover:text-primary transition-colors">ניהול</Link>
+        )}
+        {/* Logout button — only shown when signed in via Google */}
+        {isGoogleUser && (
+          <button
+            onClick={handleLogoutClick}
+            title="התנתק"
+            className="flex items-center gap-1.5 hover:text-error transition-colors"
+          >
+            <LogoutIcon className="w-4 h-4" />
+            <span>התנתק</span>
+          </button>
+        )}
       </nav>
 
       {/* Settings dropdown */}
@@ -86,5 +139,36 @@ export default function AppHeader() {
       </DropdownMenu>
 
     </header>
+
+    {/* Warning shown when the user tries to log out while an active game is in progress */}
+    <Dialog open={logoutDialogOpen} onOpenChange={(v) => { if (!loggingOut) setLogoutDialogOpen(v) }}>
+      <DialogContent className="max-w-sm rounded-3xl p-6">
+        <DialogHeader className="text-center gap-1">
+          <DialogTitle className="text-lg font-extrabold text-on-surface">
+            התנתקות במהלך משחק?
+          </DialogTitle>
+          <DialogDescription className="text-sm text-on-surface-variant font-medium leading-relaxed">
+            יש לך משחק פעיל. התנתקות תעזוב את המשחק ותסיים אותו עבור שניכם.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter className="flex flex-col gap-2 mt-2 sm:flex-col">
+          <button
+            onClick={handleLogoutConfirm}
+            disabled={loggingOut}
+            className="btn-destructive w-full py-3 rounded-2xl font-bold text-sm disabled:opacity-60"
+          >
+            {loggingOut ? 'מתנתק...' : 'כן, עזוב והתנתק'}
+          </button>
+          <button
+            onClick={() => setLogoutDialogOpen(false)}
+            disabled={loggingOut}
+            className="btn-secondary-custom w-full py-3 rounded-2xl font-bold text-sm disabled:opacity-60"
+          >
+            ביטול
+          </button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+    </>
   )
 }

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useLeaveGame } from './useLeaveGame'
+import { useReactions } from './useReactions'
 import { subjectRoleForRound, questionIndexForRound } from '../lib/gameUtils'
 import type { Player, PlayerRole, Question, PlayerReactPayload } from '../types'
 
@@ -80,12 +81,8 @@ export function useGame() {
   const [myName,      setMyName]      = useState('')
 
   // ── Reaction state ─────────────────────────────────────────────────────────
-  const [myReaction,      setMyReaction]      = useState<string | null>(null)
-  const [partnerReaction, setPartnerReaction] = useState<string | null>(null)
-  // tracks whether the local player is on cooldown (3 s between reactions)
-  const [onCooldown, setOnCooldown] = useState(false)
-  // ref to the channel so sendReaction can broadcast without closing over a stale ref
-  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null)
+  // Shared hook — handles emoji state, cooldown, and broadcasting
+  const { myReaction, partnerReaction, onCooldown, sendReaction, handleIncomingReaction, channelRef } = useReactions(playerRole)
   const [partnerName, setPartnerName] = useState('')
 
   // ── Refs (avoid stale closures in Realtime handlers) ──────────────────────
@@ -129,12 +126,9 @@ export function useGame() {
 
     const channel = supabase
       .channel(`game:${roomCode}`)
-      // Partner sent an emoji reaction — show it above their name for 1.5 s
+      // Partner sent an emoji reaction — delegate to shared useReactions handler
       .on('broadcast', { event: 'player_react' }, ({ payload }: { payload: PlayerReactPayload }) => {
-        const isMe = payload.player_role === playerRole
-        if (isMe) return // Supabase shouldn't echo back, but guard anyway
-        setPartnerReaction(payload.emoji)
-        setTimeout(() => setPartnerReaction(null), 1500)
+        if (payload.player_role !== playerRole) handleIncomingReaction(payload.emoji)
       })
       // Partner started a round — load it on both screens
       .on('broadcast', { event: 'round_start' }, ({ payload }) => {
@@ -479,31 +473,6 @@ export function useGame() {
     setPhase('finished')
     await supabase.from('rooms').update({ status: 'finished' }).eq('id', roomIdRef.current)
     navigate('/results', { replace: true })
-  }
-
-  // ── Reactions ──────────────────────────────────────────────────────────────
-
-  /**
-   * Broadcasts an emoji reaction to the partner and shows it locally.
-   * Enforces a 3-second cooldown to prevent spam.
-   */
-  function sendReaction(emoji: string) {
-    if (onCooldown || !channelRef.current) return
-
-    // Show locally (Supabase doesn't echo back to sender)
-    setMyReaction(emoji)
-    setTimeout(() => setMyReaction(null), 1500)
-
-    // Cooldown: block further reactions for 3 s
-    setOnCooldown(true)
-    setTimeout(() => setOnCooldown(false), 3000)
-
-    // Broadcast to partner
-    channelRef.current.send({
-      type: 'broadcast',
-      event: 'player_react',
-      payload: { emoji, player_role: playerRole } satisfies PlayerReactPayload,
-    })
   }
 
   // ── Derived ────────────────────────────────────────────────────────────────

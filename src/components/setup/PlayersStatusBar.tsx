@@ -10,15 +10,18 @@ const TOTAL_QUESTIONS = 10
  * Updates in real-time as each player broadcasts answers via Supabase Realtime.
  */
 export default function PlayersStatusBar({
-  myStatus, partnerStatus,
+  myStatus, partnerStatus, myReaction, partnerReaction,
 }: {
   myStatus: PlayerStatus
   partnerStatus: PlayerStatus
+  myReaction?: string | null
+  partnerReaction?: string | null
 }) {
   return (
-    <div className="w-full flex gap-3">
-      <PlayerBadge status={myStatus} isMe />
-      <PlayerBadge status={partnerStatus} isMe={false} />
+    // pt-8 reserves space above so reaction bubbles (absolute -top-7) aren't clipped
+    <div className="w-full flex gap-3 pt-8">
+      <PlayerBadge status={myStatus} isMe reaction={myReaction} />
+      <PlayerBadge status={partnerStatus} isMe={false} reaction={partnerReaction} />
     </div>
   )
 }
@@ -27,9 +30,15 @@ export default function PlayersStatusBar({
  * Single player's progress card inside the status bar.
  * Shows "X/10" progress or a green "סיים" badge with a check icon when done.
  */
-function PlayerBadge({ status, isMe }: { status: PlayerStatus; isMe: boolean }) {
+function PlayerBadge({ status, isMe, reaction }: { status: PlayerStatus; isMe: boolean; reaction?: string | null }) {
   return (
-    <Card className={`flex-1 ${isMe ? 'card-purple' : 'card-yellow'}`}>
+    <Card className={`flex-1 relative overflow-visible ${isMe ? 'card-purple' : 'card-yellow'}`}>
+      {/* Emoji reaction bubble — pops above the card when active */}
+      {reaction && (
+        <span className="absolute -top-7 left-1/2 -translate-x-1/2 text-2xl animate-pop" key={reaction + Date.now()}>
+          {reaction}
+        </span>
+      )}
       <CardContent className="p-3 flex flex-col gap-1">
         <p className="text-xs font-bold text-muted-foreground truncate flex items-center gap-1">
           {isMe

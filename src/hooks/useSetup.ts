@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useLeaveGame } from './useLeaveGame'
+import { useReactions } from './useReactions'
 import type { Question } from '../types'
 
 /** How long (ms) a partner can be idle before the AFK warning is shown */
@@ -44,6 +45,9 @@ export function useSetup() {
   const doneRef = useRef(false)
   const partnerDoneRef = useRef(false)
 
+  // Shared reaction logic — broadcasts emojis to partner, tracks cooldown
+  const { myReaction, partnerReaction, onCooldown, sendReaction, handleIncomingReaction, channelRef } = useReactions(playerRole)
+
   // Tracks when we last heard from the partner — used for AFK detection
   const partnerLastSeenRef = useRef<number>(Date.now())
   const afkTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -79,6 +83,9 @@ export function useSetup() {
     // Subscribe to the shared game channel to track partner progress and detect when they finish
     const channel = supabase
       .channel(`game:${roomCode}`)
+      .on('broadcast', { event: 'reaction' }, ({ payload }) => {
+        if (payload.role !== playerRole) handleIncomingReaction(payload.emoji)
+      })
       .on('broadcast', { event: 'progress_update' }, ({ payload }) => {
         // Only react to the OTHER player's progress updates
         if (payload.role !== playerRole) {
@@ -104,9 +111,13 @@ export function useSetup() {
       })
       .subscribe()
 
+    // Give useReactions access to the channel for outgoing broadcasts
+    channelRef.current = channel
+
     // Unsubscribe and clear AFK timer when the component unmounts
     return () => {
       channel.unsubscribe()
+      channelRef.current = null
       if (afkTimerRef.current) clearTimeout(afkTimerRef.current)
     }
   }, [])
@@ -286,5 +297,9 @@ export function useSetup() {
     partnerAfk,
     submitAnswer,
     leaveGame,
+    sendReaction,
+    myReaction,
+    partnerReaction,
+    onCooldown,
   }
 }

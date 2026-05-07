@@ -8,6 +8,7 @@ import ProgressHeader from '../components/setup/ProgressHeader'
 import QuestionCard from '../components/setup/QuestionCard'
 import WaitingScreen from '../components/setup/WaitingScreen'
 import AfkWarning from '../components/setup/AfkWarning'
+import ReactionBar from '../components/shared/ReactionBar'
 
 const TOTAL_QUESTIONS = 10
 
@@ -23,6 +24,7 @@ export default function Setup() {
   const {
     questions, currentIndex, loading, saving, error, done,
     myStatus, partnerStatus, partnerAfk, submitAnswer, leaveGame,
+    sendReaction, myReaction, partnerReaction, onCooldown,
   } = useSetup()
   useAudio('setup')
 
@@ -46,7 +48,12 @@ export default function Setup() {
     <div className="flex-1 flex flex-col items-center px-5 md:px-10 pt-8 pb-6 gap-8">
       <div className="w-full max-w-lg flex flex-col gap-6">
         {/* Live status bar — updates in real-time via Realtime broadcasts */}
-        <PlayersStatusBar myStatus={myStatus} partnerStatus={partnerStatus} />
+        <PlayersStatusBar
+          myStatus={myStatus}
+          partnerStatus={partnerStatus}
+          myReaction={myReaction}
+          partnerReaction={partnerReaction}
+        />
 
         <ProgressHeader current={currentIndex + 1} total={TOTAL_QUESTIONS} progress={progress} />
 
@@ -61,6 +68,9 @@ export default function Setup() {
         {partnerAfk && (
           <AfkWarning partnerName={partnerStatus.name} onLeave={leaveGame} />
         )}
+
+        {/* Emoji reactions — same bar as in GameRound */}
+        <ReactionBar onReact={sendReaction} onCooldown={onCooldown} />
 
         <div className="flex justify-center">
           <LeaveGameButton partnerName={partnerStatus.name} />

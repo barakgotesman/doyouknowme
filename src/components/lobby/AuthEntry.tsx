@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useAuth } from '../../hooks/useAuth'
+import { useAuth } from '../../contexts/AuthContext'
 import { UserIcon, CheckIcon, GoogleIcon } from '../ui/Icons'
 
 interface Props {

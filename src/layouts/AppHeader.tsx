@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { setGlobalVolume, getSavedVolume, isMuted, toggleMute } from '../hooks/useAudio'
-import { useAuth } from '../hooks/useAuth'
+import { useAuth } from '../contexts/AuthContext'
 import { useLeaveGame } from '../hooks/useLeaveGame'
 import { VolumeOffIcon, VolumeLowIcon, VolumeMedIcon, VolumeHighIcon, LogoutIcon, ChevronDownIcon } from '../components/ui/Icons'
 import {

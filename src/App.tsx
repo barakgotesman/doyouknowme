@@ -10,7 +10,7 @@ import Results from './pages/Results'
 import HowToPlay from './pages/HowToPlay'
 import AuthCallback from './pages/AuthCallback'
 import Admin from './pages/Admin'
-import { useAuth } from './hooks/useAuth'
+import { useAuth, AuthProvider } from './contexts/AuthContext'
 import { supabase } from './lib/supabase'
 
 interface SessionRestorerProps {
@@ -81,7 +81,7 @@ function ProtectedAdminRoute({ children }: { children: React.ReactNode }) {
     if (!loading && !isAdmin) {
       navigate('/', { replace: true })
     }
-  }, [isAdmin, loading])
+  }, [isAdmin, loading, navigate])
 
   if (loading || !isAdmin) return null
   return <>{children}</>
@@ -123,7 +123,9 @@ function AppInner() {
 export default function App() {
   return (
     <BrowserRouter>
-      <AppInner />
+      <AuthProvider>
+        <AppInner />
+      </AuthProvider>
     </BrowserRouter>
   )
 }

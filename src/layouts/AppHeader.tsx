@@ -174,16 +174,20 @@ export default function AppHeader() {
 
                 {/* Admin panel — only for admins */}
                 {/* How to play — mobile only (desktop has the nav link) */}
-                <DropdownMenuItem asChild className="md:hidden">
-                  <Link to="/how-to-play" className="cursor-pointer w-full flex items-center gap-2">
-                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <circle cx="12" cy="12" r="10" strokeLinecap="round" strokeLinejoin="round" />
-                      <path d="M12 16v-4M12 8h.01" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                    איך משחקים
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator className="md:hidden" />
+                <div className="md:hidden">
+                  <DropdownMenuItem asChild>
+                    <Link to="/how-to-play" className="cursor-pointer w-full flex items-center gap-2">
+                      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <circle cx="12" cy="12" r="10" strokeLinecap="round" strokeLinejoin="round" />
+                        <path d="M12 16v-4M12 8h.01" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                      איך משחקים
+                    </Link>
+                  </DropdownMenuItem>
+                </div>
+                <div className="md:hidden">
+                  <DropdownMenuSeparator />
+                </div>
 
                 {isAdmin && (
                   <>

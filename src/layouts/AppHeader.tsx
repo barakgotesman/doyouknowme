@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { setGlobalVolume, getSavedVolume, isMuted, toggleMute } from '../hooks/useAudio'
 import { useAuth } from '../contexts/AuthContext'
 import { useLeaveGame } from '../hooks/useLeaveGame'
@@ -26,6 +26,7 @@ import {
  */
 
 export default function AppHeader() {
+  const navigate = useNavigate()
   const { user, isAdmin, isGoogleUser, signOut } = useAuth()
   const { leaveGame } = useLeaveGame()
   const [volume, setVolume] = useState(() => isMuted() ? 0 : getSavedVolume())
@@ -175,30 +176,24 @@ export default function AppHeader() {
                 {/* Admin panel — only for admins */}
                 {/* How to play — mobile only (desktop has the nav link) */}
                 <div className="md:hidden">
-                  <DropdownMenuItem asChild>
-                    <Link to="/how-to-play" className="cursor-pointer w-full flex items-center gap-2">
-                      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <circle cx="12" cy="12" r="10" strokeLinecap="round" strokeLinejoin="round" />
-                        <path d="M12 16v-4M12 8h.01" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                      איך משחקים
-                    </Link>
+                  <DropdownMenuItem onClick={() => navigate('/how-to-play')} className="cursor-pointer flex items-center gap-2">
+                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <circle cx="12" cy="12" r="10" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M12 16v-4M12 8h.01" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                    איך משחקים
                   </DropdownMenuItem>
                 </div>
-                <div className="md:hidden">
-                  <DropdownMenuSeparator />
-                </div>
+                <DropdownMenuSeparator className="md:hidden" />
 
                 {isAdmin && (
                   <>
-                    <DropdownMenuItem asChild>
-                      <Link to="/admin" className="cursor-pointer w-full flex items-center gap-2">
-                        {/* shield icon */}
-                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                        ניהול
-                      </Link>
+                    <DropdownMenuItem onClick={() => navigate('/admin')} className="cursor-pointer flex items-center gap-2">
+                      {/* shield icon */}
+                      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                      ניהול
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                   </>

@@ -149,6 +149,7 @@ export default function AppHeader() {
                     src={avatarUrl}
                     alt={fullName}
                     onError={() => setAvatarLoadFailed(true)}
+                    referrerPolicy="no-referrer"
                     className="w-7 h-7 rounded-full object-cover ring-2 ring-primary/20"
                   />
                 ) : (

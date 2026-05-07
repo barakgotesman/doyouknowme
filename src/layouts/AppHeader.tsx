@@ -32,6 +32,7 @@ export default function AppHeader() {
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false)
   const [loggingOut, setLoggingOut] = useState(false)
   const [lastVolume, setLastVolume] = useState(() => getSavedVolume() || 0.35)
+  const [avatarLoadFailed, setAvatarLoadFailed] = useState(false)
 
   function handleVolumeChange(e: React.ChangeEvent<HTMLInputElement>) {
     const val = parseFloat(e.target.value)
@@ -143,10 +144,11 @@ export default function AppHeader() {
                 dir="ltr"
               >
                 {/* Profile photo or initial fallback */}
-                {avatarUrl ? (
+                {avatarUrl && !avatarLoadFailed ? (
                   <img
                     src={avatarUrl}
                     alt={fullName}
+                    onError={() => setAvatarLoadFailed(true)}
                     className="w-7 h-7 rounded-full object-cover ring-2 ring-primary/20"
                   />
                 ) : (

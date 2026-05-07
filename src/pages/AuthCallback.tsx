@@ -9,10 +9,27 @@ import { supabase } from '../lib/supabase'
  */
 export default function AuthCallback() {
   useEffect(() => {
-    // getSession triggers Supabase to parse the #access_token hash from the URL
-    supabase.auth.getSession().then(() => {
-      window.close()
-    })
+    const handleCallback = async () => {
+      try {
+        // Supabase automatically processes the hash from the URL when getSession is called
+        const { data: { session }, error } = await supabase.auth.getSession()
+
+        if (error) {
+          console.error('[AuthCallback] error getting session:', error)
+          return
+        }
+
+        // Session is now stored in localStorage and synced to parent window
+        // Give a moment for the parent window to receive the update via onAuthStateChange
+        setTimeout(() => {
+          window.close()
+        }, 500)
+      } catch (err) {
+        console.error('[AuthCallback] unexpected error:', err)
+      }
+    }
+
+    handleCallback()
   }, [])
 
   return (

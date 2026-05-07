@@ -9,6 +9,7 @@ import GameRound from './pages/GameRound'
 import Results from './pages/Results'
 import HowToPlay from './pages/HowToPlay'
 import AuthCallback from './pages/AuthCallback'
+import Admin from './pages/Admin'
 import { useAuth } from './hooks/useAuth'
 import { supabase } from './lib/supabase'
 
@@ -108,9 +109,7 @@ function AppInner() {
             path="/admin"
             element={
               <ProtectedAdminRoute>
-                <div className="flex-1 flex items-center justify-center text-on-surface-variant text-sm">
-                  Admin panel — coming soon
-                </div>
+                <Admin />
               </ProtectedAdminRoute>
             }
           />

@@ -38,17 +38,32 @@ export function useAuth(): AuthState {
    * Queries the profiles table for the given user id and updates isAdmin state.
    * Called whenever the auth user changes (sign-in, token refresh, sign-out).
    */
-  async function fetchProfile(userId: string) {
-    const { data } = await supabase
-      .from('profiles')
-      .select('is_admin')
-      .eq('id', userId)
-      .maybeSingle()
-    setIsAdmin(data?.is_admin === true)
+  // Returns the resolved is_admin value so callers can wait for it before clearing loading
+  async function fetchProfile(userId: string): Promise<boolean> {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('is_admin')
+        .eq('id', userId)
+        .maybeSingle()
+      const admin = data?.is_admin === true
+      console.log('[fetchProfile]', { userId, data, error, admin })
+      sessionStorage.setItem('__auth_debug', JSON.stringify({ userId, data, error: error?.message, admin, code: error?.code }))
+      setIsAdmin(admin)
+      return admin
+    } catch (e) {
+      console.error('[fetchProfile] exception', e)
+      sessionStorage.setItem('__auth_debug', JSON.stringify({ userId, exception: (e as Error).message }))
+      return false
+    }
   }
 
-  /** Derives and sets display-name / isGoogleUser from a Supabase user object. */
-  function applyUser(u: User | null) {
+  /**
+   * Derives and sets display-name / isGoogleUser from a Supabase user object.
+   * Returns a promise that resolves once the profile fetch is done, so callers
+   * can delay clearing the loading flag until isAdmin is known.
+   */
+  async function applyUser(u: User | null): Promise<void> {
     setUser(u)
     if (u) {
       const fullName: string = u.user_metadata?.full_name ?? u.user_metadata?.name ?? ''
@@ -56,7 +71,7 @@ export function useAuth(): AuthState {
       setGoogleFirstName(firstName)
       // Anonymous users have is_anonymous = true and no email
       setIsGoogleUser(!u.is_anonymous && !!u.email)
-      fetchProfile(u.id)
+      await fetchProfile(u.id)
     } else {
       setIsAdmin(false)
       setGoogleFirstName(null)
@@ -65,15 +80,18 @@ export function useAuth(): AuthState {
   }
 
   useEffect(() => {
-    // Load the current session immediately so we don't wait for the listener
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      applyUser(session?.user ?? null)
+    // Load the current session — delay setLoading(false) until fetchProfile resolves
+    // so ProtectedAdminRoute never sees loading=false before isAdmin is known
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      console.log('[useAuth init] session from getSession:', { hasSession: !!session, userId: session?.user?.id, email: session?.user?.email })
+      sessionStorage.setItem('__session_check', JSON.stringify({ hasSession: !!session, userId: session?.user?.id }))
+      await applyUser(session?.user ?? null)
       setLoading(false)
     })
 
     // Subscribe to future auth changes (sign-in, sign-out, token refresh, popup callback)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      applyUser(session?.user ?? null)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      await applyUser(session?.user ?? null)
       setLoading(false)
     })
 
@@ -112,7 +130,25 @@ export function useAuth(): AuthState {
 
   /** Signs out from Supabase and resets all auth state. */
   async function signOut() {
-    await supabase.auth.signOut()
+    try {
+      const { error } = await supabase.auth.signOut()
+      if (error) throw error
+    } catch (e) {
+      console.error('[signOut] error:', e)
+    } finally {
+      // Force clear all auth state and localStorage
+      setUser(null)
+      setIsAdmin(false)
+      setIsGoogleUser(false)
+      setGoogleFirstName(null)
+      // Manually clear the Supabase token from localStorage
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+      const projectId = supabaseUrl?.match(/https:\/\/([^.]+)\.supabase\.co/)?.[1]
+      if (projectId) {
+        const tokenKey = `sb-${projectId}-auth-token`
+        localStorage.removeItem(tokenKey)
+      }
+    }
   }
 
   return { user, loading, isAdmin, googleFirstName, isGoogleUser, signInWithGoogle, signInAsGuest, signOut }

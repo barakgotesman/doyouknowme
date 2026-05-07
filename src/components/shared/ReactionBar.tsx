@@ -1,15 +1,19 @@
 import { useEffect, useRef, useState } from 'react'
+import { ChatIcon } from '../ui/Icons'
 
 /** Emoji options the player can send */
-const REACTIONS = ['😂', '😮', '😤', '❤️', '🔥']
+const REACTIONS = ['😂', '😮', '😤', '❤️', '🔥', 'חחחח']
 
-/** Must match the cooldown duration in useGame.ts */
+/** Must match the cooldown duration in useReactions.ts */
 const COOLDOWN_MS = 3000
 
+/** Circumference of the SVG ring (r=20, so 2π×20 ≈ 125.66) */
+const RING_CIRCUMFERENCE = 2 * Math.PI * 20
+
 /**
- * Emoji reaction bar with a visual cooldown progress bar.
- * While on cooldown, buttons are grayscale and a sweep animation
- * fills in from left to right to show when the bar is ready again.
+ * Floating chat-bubble button that expands into a vertical emoji picker.
+ * Click the button → vertical list of emojis appears above it.
+ * Pick an emoji → list closes, a circular SVG arc sweeps around the button during cooldown.
  */
 export default function ReactionBar({
   onReact,
@@ -18,20 +22,19 @@ export default function ReactionBar({
   onReact: (emoji: string) => void
   onCooldown: boolean
 }) {
-  // progress: 0 = cooldown just started (gray), 1 = fully recharged (colorful)
+  const [open, setOpen] = useState(false)
+  // 0 = cooldown just started, 1 = fully recharged
   const [progress, setProgress] = useState(1)
-  const rafRef = useRef<number>(0)
+  const rafRef   = useRef<number>(0)
   const startRef = useRef<number>(0)
 
-  // When cooldown starts, animate progress from 0 → 1 over COOLDOWN_MS
+  // Animate the ring from 0 → 1 over COOLDOWN_MS when cooldown starts
   useEffect(() => {
     if (onCooldown) {
       startRef.current = performance.now()
       setProgress(0)
-
       const tick = (now: number) => {
-        const elapsed = now - startRef.current
-        const p = Math.min(elapsed / COOLDOWN_MS, 1)
+        const p = Math.min((now - startRef.current) / COOLDOWN_MS, 1)
         setProgress(p)
         if (p < 1) rafRef.current = requestAnimationFrame(tick)
       }
@@ -43,55 +46,85 @@ export default function ReactionBar({
     return () => cancelAnimationFrame(rafRef.current)
   }, [onCooldown])
 
+  // Close picker when cooldown starts (after sending)
+  useEffect(() => {
+    if (onCooldown) setOpen(false)
+  }, [onCooldown])
+
+  /** Pick an emoji: fire callback, close picker */
+  function handlePick(emoji: string) {
+    onReact(emoji)
+    setOpen(false)
+  }
+
+  // How much of the ring is filled (dashoffset goes from full → 0 as progress 0 → 1)
+  const strokeDashoffset = RING_CIRCUMFERENCE * (1 - progress)
+
   return (
-    <div className="flex flex-col items-center gap-2 py-2">
-      {/* Pill container with frosted background */}
-      <div className="relative flex items-center gap-2 px-4 py-2.5 rounded-full bg-white/70 backdrop-blur-sm border border-outline/20 shadow-lvl2 overflow-hidden">
+    <div className="relative flex items-center justify-center">
 
-        {/* Progress bar underlay — sweeps left-to-right during cooldown */}
-        {onCooldown && (
-          <div
-            className="absolute inset-0 origin-left transition-none"
-            style={{
-              background: 'linear-gradient(90deg, rgba(99,14,212,0.12) 0%, rgba(253,208,27,0.10) 100%)',
-              transform: `scaleX(${progress})`,
-              transformOrigin: 'left center',
-            }}
-          />
-        )}
+      {/* Vertical emoji list — floats above the button */}
+      {open && (
+        <div className="absolute bottom-16 left-1/2 -translate-x-1/2 z-50 flex flex-col-reverse items-center gap-1.5 animate-in fade-in slide-in-from-bottom-2 duration-150">
+          {REACTIONS.map((emoji) => (
+            <button
+              key={emoji}
+              onClick={() => handlePick(emoji)}
+              className="w-11 h-11 rounded-full bg-white/90 backdrop-blur-sm border border-outline/20 shadow-md text-xl flex items-center justify-center hover:scale-110 hover:-translate-y-0.5 active:scale-90 transition-transform duration-150"
+              aria-label={`שלח ${emoji}`}
+            >
+              {emoji}
+            </button>
+          ))}
+        </div>
+      )}
 
-        {/* Emoji buttons */}
-        {REACTIONS.map((emoji) => (
-          <button
-            key={emoji}
-            onClick={() => onReact(emoji)}
-            disabled={onCooldown}
-            className={[
-              'relative text-2xl w-11 h-11 rounded-full flex items-center justify-center',
-              'transition-all duration-200',
-              onCooldown
-                ? 'grayscale opacity-50 cursor-not-allowed'
-                : 'hover:-translate-y-1 hover:scale-110 active:scale-90',
-            ].join(' ')}
-            aria-label={`שלח ${emoji}`}
-          >
-            {emoji}
-          </button>
-        ))}
-      </div>
+      {/* Main trigger button with cooldown ring */}
+      <button
+        onClick={() => { if (!onCooldown) setOpen(v => !v) }}
+        disabled={onCooldown}
+        className={[
+          'relative z-50 w-12 h-12 rounded-full flex items-center justify-center',
+          'bg-white/80 backdrop-blur-sm border border-outline/20 shadow-md',
+          'transition-transform duration-150',
+          onCooldown  ? 'opacity-70 cursor-not-allowed' : 'hover:scale-105 active:scale-95',
+          open        ? 'bg-primary/10 border-primary/40' : '',
+        ].join(' ')}
+        aria-label="תגובות"
+      >
+        {/* Cooldown ring SVG — sits on top of everything in the button */}
+        <svg
+          className="absolute inset-0 w-full h-full -rotate-90"
+          viewBox="0 0 48 48"
+          fill="none"
+        >
+          {/* Track */}
+          <circle cx="24" cy="24" r="20" stroke="rgba(99,14,212,0.12)" strokeWidth="3" />
+          {/* Fill — sweeps clockwise as progress goes 0 → 1 */}
+          {onCooldown && (
+            <circle
+              cx="24" cy="24" r="20"
+              stroke="var(--color-primary)"
+              strokeWidth="3"
+              strokeLinecap="round"
+              strokeDasharray={RING_CIRCUMFERENCE}
+              strokeDashoffset={strokeDashoffset}
+              className="transition-none"
+            />
+          )}
+        </svg>
 
-      {/* Thin rechage strip below the pill — fills with primary color */}
-      <div className="w-40 h-1 rounded-full bg-outline/20 overflow-hidden">
+        {/* Chat bubble icon */}
+        <ChatIcon className="w-5 h-5 text-primary relative z-10" />
+      </button>
+
+      {/* Backdrop — closes picker when clicking outside */}
+      {open && (
         <div
-          className="h-full rounded-full transition-none"
-          style={{
-            width: `${progress * 100}%`,
-            background: progress === 1
-              ? 'var(--color-primary)'
-              : `linear-gradient(90deg, var(--color-primary) 0%, var(--color-secondary-container) 100%)`,
-          }}
+          className="fixed inset-0 z-40"
+          onClick={() => setOpen(false)}
         />
-      </div>
+      )}
     </div>
   )
 }

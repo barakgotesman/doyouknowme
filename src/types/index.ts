@@ -27,11 +27,16 @@ export interface Profile {
   is_admin: boolean
 }
 
+export interface Category {
+  id: string
+  name: string
+}
+
 export interface Question {
   id: string
   text: string
   options: string[]
-  category: string
+  category_id: string | null
   created_at: string
 }
 

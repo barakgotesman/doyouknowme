@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { setGlobalVolume, getSavedVolume, isMuted, toggleMute } from '../hooks/useAudio'
 import { useAuth } from '../hooks/useAuth'
 import { useLeaveGame } from '../hooks/useLeaveGame'
-import { VolumeOffIcon, VolumeLowIcon, VolumeMedIcon, VolumeHighIcon, LogoutIcon } from '../components/ui/Icons'
+import { VolumeOffIcon, VolumeLowIcon, VolumeMedIcon, VolumeHighIcon, LogoutIcon, ChevronDownIcon } from '../components/ui/Icons'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -159,9 +159,7 @@ export default function AppHeader() {
                   {fullName}
                 </span>
                 {/* Small chevron */}
-                <svg className="w-3.5 h-3.5 text-on-surface-variant hidden sm:block" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                  <path d="M6 9l6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
+                <ChevronDownIcon className="w-3.5 h-3.5 text-on-surface-variant hidden sm:block" />
               </DropdownMenuTrigger>
 
               <DropdownMenuContent align="end" className="w-48" dir="rtl">

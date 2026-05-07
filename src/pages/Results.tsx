@@ -1,8 +1,8 @@
 import { useResults, scoreLabel, type PlayAgainStatus } from '../hooks/useResults'
 import { useAudio } from '../hooks/useAudio'
-import LoadingScreen from './ui/LoadingScreen'
-import ErrorScreen from './ui/ErrorScreen'
-import { RefreshIcon, HomeIcon, ClockIcon, CheckIcon, XIcon, LightbulbIcon } from './ui/Icons'
+import LoadingScreen from '../components/shared/LoadingScreen'
+import ErrorScreen from '../components/shared/ErrorScreen'
+import { RefreshIcon, HomeIcon, ClockIcon, CheckIcon, XIcon, LightbulbIcon } from '../components/ui/Icons'
 
 /**
  * Renders the play-again action area based on the current negotiation state.

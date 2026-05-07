@@ -1,13 +1,13 @@
 import { useGame } from '../hooks/useGame'
 import { useAudio } from '../hooks/useAudio'
-import LoadingScreen from './ui/LoadingScreen'
-import ErrorScreen from './ui/ErrorScreen'
-import LeaveGameButton from './ui/LeaveGameButton'
-import ScoreHeader from './game/ScoreHeader'
-import ReactionBar from './game/ReactionBar'
-import AnsweringView from './game/AnsweringView'
-import SubjectView from './game/SubjectView'
-import RevealedView from './game/RevealedView'
+import LoadingScreen from '../components/shared/LoadingScreen'
+import ErrorScreen from '../components/shared/ErrorScreen'
+import LeaveGameButton from '../components/shared/LeaveGameButton'
+import ScoreHeader from '../components/game/ScoreHeader'
+import ReactionBar from '../components/game/ReactionBar'
+import AnsweringView from '../components/game/AnsweringView'
+import SubjectView from '../components/game/SubjectView'
+import RevealedView from '../components/game/RevealedView'
 
 /**
  * Main game screen. Orchestrates which view to render based on the current round phase:

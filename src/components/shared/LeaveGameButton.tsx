@@ -7,7 +7,7 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-} from './dialog'
+} from '../ui/dialog'
 
 /**
  * Floating leave button that shows a shadcn Dialog confirmation before abandoning the game.

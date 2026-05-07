@@ -1,13 +1,13 @@
 import { useSetup } from '../hooks/useSetup'
 import { useAudio } from '../hooks/useAudio'
-import LoadingScreen from './ui/LoadingScreen'
-import ErrorScreen from './ui/ErrorScreen'
-import LeaveGameButton from './ui/LeaveGameButton'
-import PlayersStatusBar from './setup/PlayersStatusBar'
-import ProgressHeader from './setup/ProgressHeader'
-import QuestionCard from './setup/QuestionCard'
-import WaitingScreen from './setup/WaitingScreen'
-import AfkWarning from './setup/AfkWarning'
+import LoadingScreen from '../components/shared/LoadingScreen'
+import ErrorScreen from '../components/shared/ErrorScreen'
+import LeaveGameButton from '../components/shared/LeaveGameButton'
+import PlayersStatusBar from '../components/setup/PlayersStatusBar'
+import ProgressHeader from '../components/setup/ProgressHeader'
+import QuestionCard from '../components/setup/QuestionCard'
+import WaitingScreen from '../components/setup/WaitingScreen'
+import AfkWarning from '../components/setup/AfkWarning'
 
 const TOTAL_QUESTIONS = 10
 

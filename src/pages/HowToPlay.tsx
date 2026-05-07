@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { useAudio } from '../hooks/useAudio'
-import { TrophyIcon, KeyIcon, SmileIcon, CheckIcon, HeartIcon, BrainIcon } from './ui/Icons'
+import { TrophyIcon, KeyIcon, SmileIcon, CheckIcon, HeartIcon, BrainIcon } from '../components/ui/Icons'
 
 /** A single numbered step card in the how-to-play guide. */
 function Step({ number, icon, title, desc }: { number: number; icon: React.ReactNode; title: string; desc: string }) {

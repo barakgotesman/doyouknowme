@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import PlayersStatusBar from './PlayersStatusBar'
 import AfkWarning from './AfkWarning'
-import LeaveGameButton from '../ui/LeaveGameButton'
+import LeaveGameButton from '../shared/LeaveGameButton'
 import type { PlayerStatus } from '../../hooks/useSetup'
 import { CelebrationIcon, SearchIcon, BrainIcon, ChatIcon } from '../ui/Icons'
 

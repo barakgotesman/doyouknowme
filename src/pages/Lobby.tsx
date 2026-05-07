@@ -21,6 +21,8 @@ const FEATURE_CARDS = [
 interface Props {
   /** When true, the player has an active game — hide create/join UI and show "back to game" card. */
   hasActiveSession: boolean
+  /** Called after the player cancels their waiting room so the parent can reset hasActiveSession. */
+  onSessionCleared?: () => void
 }
 
 /**
@@ -34,7 +36,7 @@ interface Props {
  *
  * Name state is lifted here so AuthEntry, JoinCard and CreateCard share it.
  */
-export default function Lobby({ hasActiveSession }: Props) {
+export default function Lobby({ hasActiveSession, onSessionCleared }: Props) {
   const [name, setName]         = useState('')
   const [roomCode, setRoomCode] = useState('')
   // tracks whether AuthEntry is still in the 'choosing' or 'loading' state
@@ -122,7 +124,16 @@ export default function Lobby({ hasActiveSession }: Props) {
   }
 
   if (waitingCode) {
-    return <WaitingView code={waitingCode} onCancel={cancelWaiting} />
+    return (
+      <WaitingView
+        code={waitingCode}
+        onCancel={async () => {
+          await cancelWaiting()
+          // Reset parent's hasActiveSession so the "back to game" card doesn't flash after cancel
+          onSessionCleared?.()
+        }}
+      />
+    )
   }
 
   return (

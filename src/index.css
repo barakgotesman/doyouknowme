@@ -152,6 +152,8 @@ html, body, #root {
   height: 100%;
   background-color: var(--color-surface);
   font-family: var(--font-sans);
+  /* Reserve scrollbar space always so Radix dropdowns/dialogs don't cause layout shift */
+  scrollbar-gutter: stable;
 }
 
 @layer base {
@@ -160,6 +162,12 @@ html, body, #root {
   }
   body {
     @apply bg-background text-foreground;
+  }
+  button, [role="button"] {
+    cursor: pointer;
+  }
+  button:disabled {
+    cursor: not-allowed;
   }
 }
 

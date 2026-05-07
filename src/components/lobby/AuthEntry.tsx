@@ -48,6 +48,8 @@ export default function AuthEntry({ name, onNameChange, onReady }: Props) {
       // Anonymous or no session — always show the choice buttons so the user
       // can pick guest or upgrade to Google. Anonymous session is reused silently
       // when they click "המשך כאורח", so no extra DB row is created.
+      // Clear the name so a previously-filled Google name doesn't carry over after logout.
+      onNameChange('')
       setMode('choosing')
     }
   }, [authLoading, isGoogleUser])

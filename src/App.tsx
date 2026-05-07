@@ -98,7 +98,7 @@ function AppInner() {
       <ReturnToGameFab onSessionDetected={setHasActiveSession} />
       <main className="flex-1 flex flex-col">
         <Routes>
-          <Route path="/" element={<Lobby hasActiveSession={hasActiveSession} />} />
+          <Route path="/" element={<Lobby hasActiveSession={hasActiveSession} onSessionCleared={() => setHasActiveSession(false)} />} />
           <Route path="/setup" element={<Setup />} />
           <Route path="/game" element={<GameRound />} />
           <Route path="/results" element={<Results />} />

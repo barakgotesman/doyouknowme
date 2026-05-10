@@ -27,7 +27,8 @@ interface Props {
 /**
  * Modal dialog for advanced room configuration.
  * Lets the host set timer on/off, timer duration, category filter, and question count.
- * Fetches categories from Supabase on first open.
+ * Fetches categories + per-category question counts from Supabase on first open.
+ * Shows a warning when the selected category pool has fewer questions than requested.
  */
 export default function AdvancedSettingsModal({ open, onClose, onSave, initialOptions }: Props) {
   const [timerEnabled,    setTimerEnabled]    = useState(initialOptions.timer_enabled)
@@ -36,8 +37,12 @@ export default function AdvancedSettingsModal({ open, onClose, onSave, initialOp
   const [questionsCount,  setQuestionsCount]  = useState(initialOptions.questions_count)
   const [categories,      setCategories]      = useState<Category[]>([])
   const [catsLoading,     setCatsLoading]     = useState(false)
+  /** Map of category_id → number of questions in that category */
+  const [catQuestionCounts, setCatQuestionCounts] = useState<Record<string, number>>({})
+  /** Total questions available across the entire pool (no filter) */
+  const [totalQuestions, setTotalQuestions] = useState(0)
 
-  // Sync local state when initialOptions change (e.g. modal reopened after external reset)
+  // Sync local state when modal reopens
   useEffect(() => {
     setTimerEnabled(initialOptions.timer_enabled)
     setTimerSeconds(initialOptions.timer_seconds)
@@ -45,15 +50,39 @@ export default function AdvancedSettingsModal({ open, onClose, onSave, initialOp
     setQuestionsCount(initialOptions.questions_count)
   }, [open])
 
-  // Fetch categories once on first open
+  // Fetch categories + question counts on first open
   useEffect(() => {
     if (!open || categories.length > 0) return
     setCatsLoading(true)
-    supabase.from('categories').select('*').order('name').then(({ data }) => {
-      setCategories(data ?? [])
+    Promise.all([
+      supabase.from('categories').select('*').order('name'),
+      // Fetch only id + category_id so we can count cheaply without pulling full question text
+      supabase.from('questions').select('id, category_id'),
+    ]).then(([catsRes, questionsRes]) => {
+      const cats = catsRes.data ?? []
+      const questions = questionsRes.data ?? []
+
+      // Build per-category count map
+      const counts: Record<string, number> = {}
+      for (const q of questions) {
+        const key = q.category_id ?? '__none__'
+        counts[key] = (counts[key] ?? 0) + 1
+      }
+
+      setCategories(cats)
+      setCatQuestionCounts(counts)
+      setTotalQuestions(questions.length)
       setCatsLoading(false)
     })
   }, [open])
+
+  /** How many questions are available given the current category selection */
+  const availableCount = selectedCatIds === null
+    ? totalQuestions
+    : selectedCatIds.reduce((sum, id) => sum + (catQuestionCounts[id] ?? 0), 0)
+
+  /** True when the pool is too small (or empty) for the requested question count */
+  const poolTooSmall = availableCount < questionsCount
 
   /** True when any setting differs from the default */
   const isModified =
@@ -189,7 +218,7 @@ export default function AdvancedSettingsModal({ open, onClose, onSave, initialOp
         </div>
 
         {/* ── Categories — pink (tertiary) ── */}
-        {categories.length > 0 && (
+        {(categories.length > 0 || catsLoading) && (
           <div className="flex flex-col gap-2 p-3 rounded-2xl bg-[var(--color-tertiary-fixed)]">
             <p className="text-sm font-bold text-[var(--color-on-tertiary-fixed)]">🏷 קטגוריות</p>
             <p className="text-xs text-[var(--color-on-tertiary-fixed)] opacity-70">בחר את הקטגוריות שיופיעו במשחק</p>
@@ -197,21 +226,42 @@ export default function AdvancedSettingsModal({ open, onClose, onSave, initialOp
               {catsLoading ? (
                 <p className="text-xs text-muted-foreground">טוען...</p>
               ) : (
-                categories.map(cat => (
-                  <button
-                    key={cat.id}
-                    onClick={() => toggleCategory(cat.id)}
-                    className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-colors ${
-                      isCatSelected(cat.id)
-                        ? 'bg-[var(--color-tertiary-container)] text-white border-[var(--color-tertiary-container)] shadow-lvl2'
-                        : 'bg-white/60 text-muted-foreground border-border'
-                    }`}
-                  >
-                    {cat.name}
-                  </button>
-                ))
+                categories.map(cat => {
+                  const count = catQuestionCounts[cat.id] ?? 0
+                  const selected = isCatSelected(cat.id)
+                  return (
+                    <button
+                      key={cat.id}
+                      onClick={() => toggleCategory(cat.id)}
+                      className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-colors flex items-center gap-1 ${
+                        selected
+                          ? 'bg-[var(--color-tertiary-container)] text-white border-[var(--color-tertiary-container)] shadow-lvl2'
+                          : 'bg-white/60 text-muted-foreground border-border'
+                      }`}
+                    >
+                      {cat.name}
+                      {/* Question count badge on each chip */}
+                      <span className={`text-[10px] font-normal opacity-80`}>
+                        ({count})
+                      </span>
+                    </button>
+                  )
+                })
               )}
             </div>
+
+            {/* Warning when selected pool is smaller than requested question count */}
+            {poolTooSmall && (
+              <div className="flex items-start gap-1.5 mt-1 p-2 rounded-xl bg-[var(--color-error-container)] text-[var(--color-on-error-container)]">
+                <span className="text-sm leading-none mt-0.5">⚠️</span>
+                <p className="text-xs font-semibold leading-snug">
+                  {availableCount === 0
+                    ? 'אין שאלות בקטגוריות שנבחרו — בחר לפחות קטגוריה אחת עם שאלות.'
+                    : `יש רק ${availableCount} שאלות בקטגוריות שנבחרו — המשחק יתאים את עצמו אוטומטית.`
+                  }
+                </p>
+              </div>
+            )}
           </div>
         )}
 

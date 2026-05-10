@@ -143,8 +143,8 @@ export function useSetup() {
 
       const roomId        = roomRes.data.id
       const categoryIds   = roomRes.data.category_ids as string[] | null
-      // How many questions each player answers — determines total rounds (5 → 10 rounds, 10 → 20 rounds)
-      const questionsCount = roomRes.data.questions_count ?? 10
+      // How many questions the host requested — may be capped below if the pool is smaller
+      const requestedCount = roomRes.data.questions_count ?? 10
 
       // Fetch players and this player's saved answers in parallel
       const [playersRes, savedAnswersRes] = await Promise.all([
@@ -171,6 +171,10 @@ export function useSetup() {
       const allQuestions = categoryIds
         ? rawQuestions.filter(q => categoryIds.includes(q.category_id ?? ''))
         : rawQuestions
+
+      // Cap to however many questions are actually available — prevents an infinite setup loop
+      // when the selected category has fewer questions than the host requested.
+      const questionsCount = Math.min(requestedCount, allQuestions.length)
 
       let shuffled: typeof allQuestions
 

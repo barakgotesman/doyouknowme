@@ -7,11 +7,14 @@ import { supabase } from '../lib/supabase'
  *   1. Updates rooms.status to 'abandoned' in the DB (so the AFK player is kicked on return)
  *   2. Broadcasts 'game_abandoned' on the Realtime channel (kicks partner if still on page)
  *   3. Clears sessionStorage and navigates this player home
+ * @param forceReload - if true, uses window.location.replace instead of React Router navigate.
+ *   Required when leaving from the Lobby (WaitingView), because navigate('/')
+ *   doesn't remount the component, so in-memory state like waitingCode won't reset.
  */
 export function useLeaveGame() {
   const navigate = useNavigate()
 
-  async function leaveGame() {
+  async function leaveGame({ forceReload = false }: { forceReload?: boolean } = {}) {
     const roomCode = sessionStorage.getItem('room_code') ?? ''
 
     try {
@@ -34,7 +37,13 @@ export function useLeaveGame() {
     sessionStorage.removeItem('player_id')
     sessionStorage.removeItem('room_code')
     sessionStorage.removeItem('player_role')
-    navigate('/', { replace: true })
+
+    if (forceReload) {
+      // Force full page reload so all in-memory React state (e.g. WaitingView's waitingCode) is cleared
+      window.location.replace('/')
+    } else {
+      navigate('/', { replace: true })
+    }
   }
 
   return { leaveGame }

@@ -57,7 +57,8 @@ export default function AppHeader() {
   /** Leaves the active game then signs out. */
   async function handleLogoutConfirm() {
     setLoggingOut(true)
-    await leaveGame()
+    // forceReload ensures the page fully reloads, clearing WaitingView's in-memory waitingCode state
+    await leaveGame({ forceReload: true })
     await signOut()
     setLoggingOut(false)
     setLogoutDialogOpen(false)

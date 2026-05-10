@@ -257,7 +257,7 @@ export default function AdvancedSettingsModal({ open, onClose, onSave, initialOp
                 <p className="text-xs font-semibold leading-snug">
                   {availableCount === 0
                     ? 'אין שאלות בקטגוריות שנבחרו — בחר לפחות קטגוריה אחת עם שאלות.'
-                    : `יש רק ${availableCount} שאלות בקטגוריות שנבחרו — המשחק יתאים את עצמו אוטומטית.`
+                    : `יש רק ${availableCount} שאלות בקטגוריות שנבחרו — המשחק יתנהל עם ${availableCount} שאלות (${availableCount * 2} סיבובים) במקום ${questionsCount} (${questionsCount * 2} סיבובים).`
                   }
                 </p>
               </div>

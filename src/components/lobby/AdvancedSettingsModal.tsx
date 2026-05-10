@@ -176,8 +176,8 @@ export default function AdvancedSettingsModal({ open, onClose, onSave, initialOp
             </button>
           </div>
 
-          {/* Seconds selector — grayed out when timer is off */}
-          <div className={`flex flex-col gap-1 transition-opacity ${timerEnabled ? 'opacity-100' : 'opacity-40 pointer-events-none'}`}>
+          {/* Seconds selector — hidden when timer is off */}
+          <div className={`flex flex-col gap-1 transition-opacity ${timerEnabled ? 'opacity-100' : 'hidden'}`}>
             <p className="text-xs text-[var(--color-on-primary-fixed)] opacity-70">שניות לתור</p>
             <div className="flex gap-2">
               {TIMER_SECOND_OPTIONS.map(s => (

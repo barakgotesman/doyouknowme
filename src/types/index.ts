@@ -8,6 +8,22 @@ export interface Room {
   player_a_id: string | null
   player_b_id: string | null
   created_at: string
+  /** Timer enabled/disabled — when false, no countdown is shown and rounds never auto-expire */
+  timer_enabled: boolean
+  /** Seconds per round when timer is enabled (10 / 15 / 20 / 30) */
+  timer_seconds: number
+  /** Category UUIDs to include; null = all categories */
+  category_ids: string[] | null
+  /** Number of questions each player answers in setup (5 or 10), determines total rounds */
+  questions_count: number
+}
+
+/** Subset of Room columns written when creating a room */
+export interface RoomOptions {
+  timer_enabled: boolean
+  timer_seconds: number
+  category_ids: string[] | null
+  questions_count: number
 }
 
 export interface Player {

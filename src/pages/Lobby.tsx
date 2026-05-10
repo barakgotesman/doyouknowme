@@ -10,7 +10,17 @@ import JoinCard from '../components/lobby/JoinCard'
 import CreateCard from '../components/lobby/CreateCard'
 import FeatureCard from '../components/lobby/FeatureCard'
 import AuthEntry from '../components/lobby/AuthEntry'
+import AdvancedSettingsModal from '../components/lobby/AdvancedSettingsModal'
 import { TrophyIcon, PinIcon, HeartIcon, KeyIcon } from '../components/ui/Icons'
+import type { RoomOptions } from '../types'
+
+/** Default room options — applied when the host doesn't open the advanced settings */
+const DEFAULT_ROOM_OPTIONS: RoomOptions = {
+  timer_enabled:   true,
+  timer_seconds:   20,
+  category_ids:    null,
+  questions_count: 10,
+}
 
 const FEATURE_CARDS = [
   { icon: <TrophyIcon className="w-7 h-7" />, title: 'תחרות חברים',  desc: 'גלו מי מכיר את מי טוב יותר בסיבוב מהנה',  color: 'tertiary'  as const },
@@ -44,6 +54,9 @@ export default function Lobby({ hasActiveSession, onSessionCleared }: Props) {
   const [authReady, setAuthReady] = useState(false)
   // Error message shown when a ?join= link points to an invalid or unavailable room
   const [joinLinkError, setJoinLinkError] = useState<string | null>(null)
+  // Advanced room options — configured via the settings modal before creating a room
+  const [roomOptions, setRoomOptions]         = useState<RoomOptions>(DEFAULT_ROOM_OPTIONS)
+  const [settingsOpen, setSettingsOpen]       = useState(false)
   // When set, the player arrived via a share link — show simplified join-only UI
   const [joinLinkCode, setJoinLinkCode] = useState<string | null>(null)
   const { loading, error, waitingCode, createRoom, joinRoom, cancelWaiting, restoreWaiting } = useRoom()
@@ -231,7 +244,14 @@ export default function Lobby({ hasActiveSession, onSessionCleared }: Props) {
               <CreateCard
                 name={name}
                 loading={loading}
-                onCreate={() => createRoom(name)}
+                onCreate={() => createRoom(name, roomOptions)}
+                onOpenSettings={() => setSettingsOpen(true)}
+                hasCustomSettings={
+                  !roomOptions.timer_enabled ||
+                  roomOptions.timer_seconds !== DEFAULT_ROOM_OPTIONS.timer_seconds ||
+                  roomOptions.category_ids !== null ||
+                  roomOptions.questions_count !== DEFAULT_ROOM_OPTIONS.questions_count
+                }
               />
             </div>
           </div>
@@ -243,6 +263,14 @@ export default function Lobby({ hasActiveSession, onSessionCleared }: Props) {
           </div>
         </>
       )}
+
+      {/* Advanced room settings modal — opened from CreateCard */}
+      <AdvancedSettingsModal
+        open={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        onSave={setRoomOptions}
+        initialOptions={roomOptions}
+      />
     </div>
   )
 }

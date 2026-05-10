@@ -129,16 +129,22 @@ export function useSetup() {
    */
   async function fetchQuestionsAndPlayers() {
     try {
-      // Fetch questions and room in parallel — room_id needed for player lookup
+      // Fetch questions and room in parallel — room_id, category_ids, and questions_count needed
       const [questionsRes, roomRes] = await Promise.all([
         supabase.from('questions').select('*'),
-        supabase.from('rooms').select('id').eq('code', roomCode).single(),
+        supabase.from('rooms')
+          .select('id, category_ids, questions_count')
+          .eq('code', roomCode)
+          .single(),
       ])
 
       if (questionsRes.error) throw questionsRes.error
       if (roomRes.error) throw roomRes.error
 
-      const roomId = roomRes.data.id
+      const roomId        = roomRes.data.id
+      const categoryIds   = roomRes.data.category_ids as string[] | null
+      // How many questions each player answers — determines total rounds (5 → 10 rounds, 10 → 20 rounds)
+      const questionsCount = roomRes.data.questions_count ?? 10
 
       // Fetch players and this player's saved answers in parallel
       const [playersRes, savedAnswersRes] = await Promise.all([
@@ -156,9 +162,16 @@ export function useSetup() {
       const answeredIds = new Set((savedAnswersRes.data ?? []).map(a => a.question_id))
       const alreadyAnswered = answeredIds.size
 
-      // Shuffle all questions with a stable seed-independent sort, then take 10.
+      // Shuffle all questions with a stable seed-independent sort, then take questionsCount.
+      // If category_ids is set, restrict to those categories first.
       // On resume, filter out already-answered questions so the player continues where they left off.
-      const allQuestions = questionsRes.data ?? []
+      const rawQuestions = questionsRes.data ?? []
+
+      // Apply category filter when the host restricted categories in the room settings
+      const allQuestions = categoryIds
+        ? rawQuestions.filter(q => categoryIds.includes(q.category_id ?? ''))
+        : rawQuestions
+
       let shuffled: typeof allQuestions
 
       if (alreadyAnswered > 0) {
@@ -167,20 +180,20 @@ export function useSetup() {
         // required because we'll jump currentIndex past the answered ones)
         const unanswered = allQuestions.filter(q => !answeredIds.has(q.id))
         const answered   = allQuestions.filter(q => answeredIds.has(q.id))
-        shuffled = [...answered, ...unanswered.sort(() => Math.random() - 0.5)].slice(0, 10)
+        shuffled = [...answered, ...unanswered.sort(() => Math.random() - 0.5)].slice(0, questionsCount)
       } else {
-        shuffled = [...allQuestions].sort(() => Math.random() - 0.5).slice(0, 10)
+        shuffled = [...allQuestions].sort(() => Math.random() - 0.5).slice(0, questionsCount)
       }
 
       setQuestions(shuffled)
 
       // Restore progress index — jump past already-answered questions
-      if (alreadyAnswered > 0 && alreadyAnswered < 10) {
+      if (alreadyAnswered > 0 && alreadyAnswered < questionsCount) {
         setCurrentIndex(alreadyAnswered)
       }
 
       if (me) {
-        const myDone = me.setup_done || alreadyAnswered >= 10
+        const myDone = me.setup_done || alreadyAnswered >= questionsCount
         setMyStatus({ name: me.display_name, progress: alreadyAnswered, done: myDone })
         if (myDone) {
           doneRef.current = true

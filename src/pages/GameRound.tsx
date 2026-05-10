@@ -24,6 +24,7 @@ export default function GameRound() {
     loading, error,
     roundNumber, phase, subjectRole, isAnswering,
     question, correctAnswer, submittedAnswer, isCorrect, startedAt,
+    timerEnabled, timerSeconds,
     myName, partnerName, myRole,
     myScore, partnerScore,
     submitAnswer, handleTimeout, leaveGame,
@@ -67,6 +68,8 @@ export default function GameRound() {
             startedAt={startedAt!}
             onAnswer={submitAnswer}
             onTimeout={handleTimeout}
+            timerEnabled={timerEnabled}
+            timerSeconds={timerSeconds}
           />
         ) : (
           <SubjectView

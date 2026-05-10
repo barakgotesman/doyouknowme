@@ -79,6 +79,11 @@ export function useGame() {
   const [myScore,      setMyScore]      = useState(0)
   const [partnerScore, setPartnerScore] = useState(0)
   const [myName,      setMyName]      = useState('')
+  /** Room-level timer config loaded during initGame */
+  const [timerEnabled, setTimerEnabled] = useState(true)
+  const [timerSeconds, setTimerSeconds] = useState(20)
+  /** Total number of rounds in this game (questionsCount × 2) */
+  const [totalRounds, setTotalRounds] = useState(20)
 
   // ── Reaction state ─────────────────────────────────────────────────────────
   // Shared hook — handles emoji state, cooldown, and broadcasting
@@ -87,8 +92,10 @@ export function useGame() {
 
   // ── Refs (avoid stale closures in Realtime handlers) ──────────────────────
 
-  const roundNumberRef = useRef(1)
-  const phaseRef       = useRef<RoundPhase>('loading')
+  const roundNumberRef  = useRef(1)
+  const phaseRef        = useRef<RoundPhase>('loading')
+  // Ref so scheduleNextRound / maybeInitiateRound always see the correct total even in closures
+  const totalRoundsRef  = useRef(20)
 
   // Stable references to game data needed inside callbacks
   const roomIdRef      = useRef('')
@@ -167,11 +174,25 @@ export function useGame() {
    */
   async function initGame() {
     try {
-      // Fetch room by code to get its UUID and status
+      // Fetch room by code to get its UUID, status, and game config options
       const { data: room, error: roomErr } = await supabase
-        .from('rooms').select('id, status').eq('code', roomCode).single()
+        .from('rooms')
+        .select('id, status, timer_enabled, timer_seconds, questions_count')
+        .eq('code', roomCode)
+        .single()
       if (roomErr || !room) throw roomErr ?? new Error('Room not found')
       roomIdRef.current = room.id
+
+      // Store room-level timer and round config so the game UI can use them
+      const timerEnabledVal = room.timer_enabled ?? true
+      const timerSecondsVal = room.timer_seconds ?? 20
+      const questionsCount  = room.questions_count ?? 10
+      const totalRoundsVal  = questionsCount * 2
+      setTimerEnabled(timerEnabledVal)
+      setTimerSeconds(timerSecondsVal)
+      setTotalRounds(totalRoundsVal)
+      // Keep refs for use inside closures
+      totalRoundsRef.current = totalRoundsVal
 
       // If the room is already finished, this player shouldn't be on the game screen —
       // send them home rather than assuming the sessionStorage belongs to their finished game.
@@ -269,11 +290,11 @@ export function useGame() {
     if (activeRound) {
       // Re-enter an in-progress round
       handleRoundStart(activeRound.round_number, activeRound.started_at!)
-    } else if (lastRound && lastRound.round_number < 20) {
+    } else if (lastRound && lastRound.round_number < totalRoundsRef.current) {
       // Last round was completed — start the next one
       const nextRound = lastRound.round_number + 1
       maybeInitiateRound(nextRound)
-    } else if (lastRound && lastRound.round_number === 20) {
+    } else if (lastRound && lastRound.round_number >= totalRoundsRef.current) {
       // All rounds done — go to results
       setPhase('finished')
       navigate('/results', { replace: true })
@@ -323,7 +344,7 @@ export function useGame() {
    * The initiator is the subject player for that round — deterministic and race-condition free.
    */
   function maybeInitiateRound(num: number) {
-    if (num > 20) {
+    if (num > totalRoundsRef.current) {
       endGame()
       return
     }
@@ -457,7 +478,7 @@ export function useGame() {
   function scheduleNextRound() {
     setTimeout(() => {
       const next = roundNumberRef.current + 1
-      if (next > 20) {
+      if (next > totalRoundsRef.current) {
         endGame()
       } else {
         maybeInitiateRound(next)
@@ -485,6 +506,7 @@ export function useGame() {
     loading,
     error,
     roundNumber,
+    totalRounds,
     phase,
     subjectRole,
     isAnswering,
@@ -493,6 +515,8 @@ export function useGame() {
     submittedAnswer,
     isCorrect,
     startedAt,
+    timerEnabled,
+    timerSeconds,
     myName,
     partnerName,
     myRole: playerRole,

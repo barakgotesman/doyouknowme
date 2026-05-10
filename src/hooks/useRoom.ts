@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import type { RealtimeChannel } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
 import { generateRoomCode } from '../lib/gameUtils'
+import type { RoomOptions } from '../types'
 
 /**
  * Manages room creation and joining logic for the Lobby screen.
@@ -49,12 +50,12 @@ export function useRoom() {
 
   /**
    * Creates a new room as Player A.
-   * - Inserts a room row with a unique 4-letter code
+   * - Inserts a room row with a unique 4-letter code and the host's chosen options
    * - Inserts a player row with role 'A'
    * - Saves session to sessionStorage
    * - Subscribes to Realtime and navigates to /setup when Player B joins
    */
-  async function createRoom(name: string) {
+  async function createRoom(name: string, options?: RoomOptions) {
     setLoading(true)
     setError(null)
     try {
@@ -67,8 +68,14 @@ export function useRoom() {
         if (!existing) break // unique code found
       }
 
+      // Merge host options into the room row — defaults applied by DB if options omitted
+      const roomInsert = {
+        code,
+        status: 'waiting',
+        ...(options ?? {}),
+      }
       const { data: room, error: roomErr } = await supabase
-        .from('rooms').insert({ code, status: 'waiting' }).select().single()
+        .from('rooms').insert(roomInsert).select().single()
       if (roomErr || !room) throw roomErr ?? new Error('Failed to create room')
 
       // Read the current auth session so we can persist auth_id on the player row
